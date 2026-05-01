@@ -22,7 +22,9 @@ body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f1f5f9; min-
 .form-card { background: white; border-radius: 16px; border: 1.5px solid #e2e8f0; box-shadow: 0 2px 12px rgba(0,0,0,.06); width: 100%; max-width: 560px; padding: 28px 28px 24px; }
 .step-label { font-size: 10px; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase; color: #94a3b8; margin-bottom: 8px; }
 .step-title { font-size: 18px; font-weight: 800; color: #0f172a; margin-bottom: 6px; }
-.step-desc { font-size: 13px; color: #64748b; margin-bottom: 22px; line-height: 1.5; }
+.step-desc { font-size: 13px; color: #64748b; margin-bottom: 10px; line-height: 1.5; }
+.step-hint { font-size: 11px; color: #94a3b8; font-style: italic; margin-bottom: 20px; padding: 8px 12px; background: #f8fafc; border-left: 3px solid #e2e8f0; border-radius: 0 6px 6px 0; line-height: 1.5; }
+.step-hint b { color: #64748b; font-style: normal; }
 
 .field { margin-bottom: 18px; }
 .field label { display: block; font-size: 12px; font-weight: 700; color: #374151; margin-bottom: 6px; }
@@ -57,20 +59,37 @@ body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f1f5f9; min-
 .btn-prev:hover:not(:disabled) { background: #e2e8f0; }
 .btn-prev:disabled { opacity: 0.35; cursor: default; }
 .btn-next { background: #2563eb; color: white; padding: 10px 28px; }
-.btn-next:hover { background: #1d4ed8; }
+.btn-next:hover:not(:disabled) { background: #1d4ed8; }
+.btn-next:disabled { opacity: 0.7; cursor: default; }
+.btn-next.generating { background: #1d4ed8; animation: pulse-btn 1s ease-in-out infinite; }
+@keyframes pulse-btn { 0%,100% { opacity: 1; } 50% { opacity: 0.7; } }
 .step-counter { font-size: 11px; color: #94a3b8; }
+
+/* Step 7 — last step big button */
+.btn-next.last-step { background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%); font-size: 14px; padding: 12px 32px; box-shadow: 0 4px 16px rgba(37,99,235,0.35); }
+.btn-next.last-step:hover { box-shadow: 0 6px 20px rgba(37,99,235,0.45); transform: translateY(-1px); }
+
+/* ─── CONFETTI ─────────────────────────────────────── */
+.confetti-piece { position: fixed; top: -20px; z-index: 9999; pointer-events: none; animation: confetti-fall linear forwards; }
+@keyframes confetti-fall {
+  0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(105vh) rotate(720deg); opacity: 0; }
+}
 
 /* ─── OUTPUT WRAP ───────────────────────────────────── */
 #out-wrap { display: none; padding: 28px 16px 80px; }
+#out-wrap.visible { display: block; animation: fadeUp 0.45s ease forwards; }
+@keyframes fadeUp { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: translateY(0); } }
 
 .out-header { text-align: center; margin-bottom: 6px; }
 .out-header h1 { font-size: 20px; font-weight: 800; color: #0f172a; }
 .out-header p { font-size: 12px; color: #64748b; margin-top: 3px; }
 
 /* View toggle tabs */
-.view-tabs { display: flex; gap: 8px; justify-content: center; margin: 20px 0 28px; }
+.view-tabs { display: flex; gap: 8px; justify-content: center; margin: 20px 0 16px; }
 .vtab { padding: 8px 20px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; border: 1.5px solid #e2e8f0; background: white; color: #64748b; transition: all 0.15s; }
 .vtab.active { background: #0f172a; color: white; border-color: #0f172a; }
+.vtab-note { text-align: center; font-size: 11px; color: #94a3b8; margin-bottom: 20px; }
 
 /* Action bar */
 .action-bar { max-width: 1100px; margin: 0 auto 28px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
@@ -88,7 +107,6 @@ body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f1f5f9; min-
 .fc-outer { max-width: 1100px; margin: 0 auto; overflow-x: auto; }
 .fc-layout { display: flex; gap: 0; min-width: 700px; }
 
-/* Lanes */
 .fc-lane { flex: 1; display: flex; flex-direction: column; align-items: center; padding-bottom: 24px; }
 .fc-lane-bg-blue   { background: #eef6ff; border: 1.5px solid #bfdbfe; border-radius: 14px; }
 .fc-lane-bg-orange { background: #fff7ed; border: 1.5px solid #fed7aa; border-radius: 14px; }
@@ -96,13 +114,11 @@ body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f1f5f9; min-
 .fc-lane-hdr.blue   { background: #2563eb; }
 .fc-lane-hdr.orange { background: #ea580c; }
 
-/* Gap corridor */
 .fc-gap { width: 64px; flex-shrink: 0; display: flex; flex-direction: column; align-items: center; padding-top: 56px; }
 .fc-gap-line { width: 2px; flex: 1; background: repeating-linear-gradient(to bottom, #f59e0b 0, #f59e0b 7px, transparent 7px, transparent 14px); margin: 8px 0; }
 .fc-gap-label { font-size: 8px; font-weight: 800; letter-spacing: 1.2px; text-transform: uppercase; color: #f59e0b; writing-mode: vertical-rl; text-orientation: mixed; }
 .fc-gap-note { font-size: 9px; font-weight: 700; color: #f59e0b; text-align: center; line-height: 1.3; margin-top: 8px; }
 
-/* Nodes */
 .fc-pill { border-radius: 50px; padding: 10px 20px; font-size: 13px; font-weight: 700; text-align: center; width: 88%; }
 .fc-pill.green  { background: #16a34a; color: white; }
 .fc-pill.blue   { background: #2563eb; color: white; }
@@ -117,22 +133,18 @@ body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f1f5f9; min-
 .fc-box.crm   { background: #f8fafc; border-color: #94a3b8; color: #475569; }
 .fc-box.sys   { background: #f0fdf4; border-color: #16a34a; color: #15803d; }
 
-/* Diamond */
 .fc-diamond { position: relative; width: 130px; height: 76px; margin: 0 auto; display: flex; align-items: center; justify-content: center; }
 .fc-diamond::before { content: ''; position: absolute; width: 70px; height: 70px; transform: rotate(45deg); background: #fffbeb; border: 1.5px solid #d97706; }
 .fc-diamond-t { position: relative; z-index: 1; font-size: 11px; font-weight: 700; color: #92400e; text-align: center; line-height: 1.3; padding: 0 14px; }
 
-/* Arrows */
 .fc-arr { display: flex; justify-content: center; height: 20px; align-items: center; color: #94a3b8; font-size: 15px; width: 100%; }
 .fc-arr-yes { height: 16px; display: flex; align-items: center; justify-content: center; gap: 4px; font-size: 9px; font-weight: 800; color: #f59e0b; }
 
-/* YES/NO labels beneath diamond */
 .fc-yn-row { display: flex; justify-content: space-between; width: 130px; margin: 0 auto; padding: 0 4px; }
 .fc-yn { font-size: 9px; font-weight: 800; }
 .fc-yn.yes { color: #f59e0b; }
 .fc-yn.no  { color: #ef4444; }
 
-/* Branch (Hot/Warm split) */
 .fc-branch { display: flex; gap: 8px; width: 92%; }
 .fc-branch-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 0; }
 .fc-b-label { font-size: 10px; font-weight: 800; padding: 3px 10px; border-radius: 20px; margin-bottom: 4px; }
@@ -140,17 +152,26 @@ body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f1f5f9; min-
 .fc-b-label.warm { background: #fffbeb; color: #b45309; border: 1px solid #fcd34d; }
 .fc-branch-col .fc-box { width: 100%; }
 
-/* Merge line */
 .fc-merge { position: relative; width: 88%; height: 24px; display: flex; justify-content: center; align-items: flex-end; }
 .fc-merge::before { content: ''; position: absolute; top: 0; left: 10%; right: 10%; height: 1.5px; background: #cbd5e1; }
 .fc-merge::after { content: '↓'; color: #94a3b8; font-size: 15px; }
 
-/* Close pill at bottom */
 .fc-close { border-radius: 50px; padding: 10px 20px; background: #16a34a; color: white; font-size: 13px; font-weight: 800; text-align: center; width: 88%; }
+.fc-gap { width: 64px; flex-shrink: 0; }
+
+/* ─── PLG CTA ───────────────────────────────────────── */
+.plg-cta { max-width: 1100px; margin: 32px auto 0; background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%); border-radius: 16px; padding: 28px 36px; display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap; }
+.plg-cta-text {}
+.plg-cta-title { font-size: 18px; font-weight: 800; color: white; margin-bottom: 5px; }
+.plg-cta-sub { font-size: 13px; color: #93c5fd; }
+.plg-cta-actions { display: flex; gap: 10px; flex-wrap: wrap; flex-shrink: 0; }
+.btn-wa { padding: 11px 20px; border-radius: 10px; font-size: 13px; font-weight: 800; text-decoration: none; display: inline-flex; align-items: center; gap: 7px; background: #25d366; color: white; transition: all 0.15s; cursor: pointer; border: none; }
+.btn-wa:hover { background: #1da851; transform: translateY(-1px); }
+.btn-cal-link { padding: 11px 20px; border-radius: 10px; font-size: 13px; font-weight: 800; text-decoration: none; display: inline-flex; align-items: center; gap: 7px; background: rgba(255,255,255,0.1); color: white; border: 1.5px solid rgba(255,255,255,0.25); transition: all 0.15s; cursor: pointer; }
+.btn-cal-link:hover { background: rgba(255,255,255,0.18); }
 
 /* ─── BLUEPRINT (IPO) ───────────────────────────────── */
 #view-blueprint { display: none; }
-
 .page-title { text-align: center; margin-bottom: 10px; }
 .page-title h1 { font-size: 20px; font-weight: 800; color: #0f172a; }
 .page-title p { font-size: 12px; color: #64748b; margin-top: 4px; }
@@ -216,11 +237,28 @@ body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f1f5f9; min-
 .tc-title { font-size: 13px; font-weight: 700; color: #0f172a; margin-bottom: 4px; }
 .tc-body { font-size: 12px; color: #64748b; line-height: 1.5; }
 
+/* ─── CLAUDE CODE SPEC ─────────────────────────────── */
+.spec-wrap { max-width: 960px; margin: 0 auto; background: #0f172a; border-radius: 12px; border: 1.5px solid #334155; overflow: hidden; }
+.spec-header { padding: 12px 18px; background: #1e293b; display: flex; align-items: center; gap: 10px; }
+.spec-dots { display: flex; gap: 6px; }
+.spec-dot { width: 11px; height: 11px; border-radius: 50%; }
+.spec-dot.r { background: #ef4444; } .spec-dot.y { background: #f59e0b; } .spec-dot.g { background: #22c55e; }
+.spec-file { font-size: 11px; color: #64748b; font-family: 'Courier New', monospace; margin-left: 6px; }
+.spec-body { padding: 20px 22px; font-family: 'Courier New', monospace; font-size: 12px; color: #94a3b8; line-height: 1.8; overflow-x: auto; }
+.spec-body .sk { color: #7dd3fc; } /* key */
+.spec-body .sv { color: #86efac; } /* string value */
+.spec-body .sc { color: #64748b; font-style: italic; } /* comment */
+.spec-body .sh { color: #c084fc; font-weight: 700; } /* section heading */
+.spec-body .sa { color: #fcd34d; } /* array item bullet */
+.spec-copy { padding: 10px 18px; background: #1e293b; border-top: 1px solid #334155; display: flex; justify-content: flex-end; }
+.btn-copy-spec { padding: 6px 14px; border-radius: 6px; background: #2563eb; color: white; font-size: 11px; font-weight: 700; border: none; cursor: pointer; transition: background 0.15s; font-family: inherit; }
+.btn-copy-spec:hover { background: #1d4ed8; }
+
 footer { text-align: center; margin-top: 56px; font-size: 11px; color: #94a3b8; }
 
 @media print {
-  .action-bar, .view-tabs, #form-wrap { display: none !important; }
-  #out-wrap { display: block !important; padding: 16px; }
+  .action-bar, .view-tabs, .vtab-note, #form-wrap, .plg-cta { display: none !important; }
+  #out-wrap { display: block !important; padding: 16px; animation: none !important; }
   .vtab { display: none; }
   #view-client, #view-blueprint { display: block !important; }
   body { background: white; }
@@ -245,7 +283,8 @@ footer { text-align: center; margin-top: 56px; font-size: 11px; color: #94a3b8; 
     <div class="form-step" id="step-1">
       <div class="step-label">Step 1 of 7</div>
       <div class="step-title">Tell us about your business</div>
-      <div class="step-desc">We'll use this to personalise every message in your blueprint.</div>
+      <div class="step-desc">We'll use this to personalise every message and node in your blueprint.</div>
+      <div class="step-hint">💡 Your business name appears on the AI's opening message, alert notifications, and your shareable flowchart link.</div>
       <div class="field"><label>Business Name</label><input type="text" id="f-bizname" placeholder="e.g. TM Motoworld, U Fresh, L'Artelier"></div>
       <div class="field"><label>Business Type</label>
         <div class="option-grid cols-2">
@@ -266,6 +305,7 @@ footer { text-align: center; margin-top: 56px; font-size: 11px; color: #94a3b8; 
       <div class="step-label">Step 2 of 7</div>
       <div class="step-title">What's costing you the most?</div>
       <div class="step-desc">Pick up to 3 — these become your priority flows.</div>
+      <div class="step-hint">💡 <b>Your top pain = your first ROI.</b> We build the flows that directly eliminate your biggest daily bottleneck first. Most clients see payback within 30 days of the first flow.</div>
       <div class="option-grid">
         <label class="opt-item" data-group="pain" data-val="Too many enquiries"><input type="checkbox"><span class="opt-icon">📱</span><span class="opt-text"><span class="opt-title">Too many WhatsApp enquiries</span><span class="opt-sub">Can't reply fast enough, leads going cold</span></span><span class="opt-check"></span></label>
         <label class="opt-item" data-group="pain" data-val="No follow-up system"><input type="checkbox"><span class="opt-icon">😶</span><span class="opt-text"><span class="opt-title">Leads come in but no follow-up</span><span class="opt-sub">Enquiries drop off and you forget to chase</span></span><span class="opt-check"></span></label>
@@ -281,6 +321,7 @@ footer { text-align: center; margin-top: 56px; font-size: 11px; color: #94a3b8; 
       <div class="step-label">Step 3 of 7</div>
       <div class="step-title">How busy is your WhatsApp?</div>
       <div class="step-desc">Helps us size the system right.</div>
+      <div class="step-hint">💡 Volume determines how the AI is architected — higher volume means parallel conversation handling and smarter routing rules. This also shapes the ROI number in your blueprint.</div>
       <div class="field"><label>Daily messages received</label>
         <div class="option-grid">
           <label class="opt-item opt-radio" data-group="volume" data-val="Under 50"><input type="radio"><span class="opt-icon">🟢</span><span class="opt-text"><span class="opt-title">Under 50 messages/day</span><span class="opt-sub">Manageable but still time-consuming</span></span><span class="opt-check"></span></label>
@@ -302,6 +343,7 @@ footer { text-align: center; margin-top: 56px; font-size: 11px; color: #94a3b8; 
       <div class="step-label">Step 4 of 7</div>
       <div class="step-title">Which AI flows do you need?</div>
       <div class="step-desc">Each one becomes a section in your blueprint. Select all that apply.</div>
+      <div class="step-hint">💡 <b>Most clients start with 2–3 flows.</b> Each flow you select becomes its own Input → Process → Output card in your blueprint, with exact message templates and logic pre-mapped.</div>
       <div class="option-grid">
         <label class="opt-item" data-group="flows" data-val="lead-qualify"><input type="checkbox"><span class="opt-icon">🔍</span><span class="opt-text"><span class="opt-title">Lead Qualify</span><span class="opt-sub">AI qualifies new leads 24/7 — scores intent, routes hot/warm/cold</span></span><span class="opt-check"></span></label>
         <label class="opt-item" data-group="flows" data-val="follow-up"><input type="checkbox"><span class="opt-icon">📤</span><span class="opt-text"><span class="opt-title">Follow-Up Sequence</span><span class="opt-sub">AI chases non-replies automatically — Day 3 / 7 / 30</span></span><span class="opt-check"></span></label>
@@ -316,6 +358,7 @@ footer { text-align: center; margin-top: 56px; font-size: 11px; color: #94a3b8; 
       <div class="step-label">Step 5 of 7</div>
       <div class="step-title">How does your business operate?</div>
       <div class="step-desc">Defines when AI is on and what happens when a hot lead is found.</div>
+      <div class="step-hint">💡 <b>Operating hours</b> tell the AI when to reply instantly vs. queue for the next day. <b>Hot lead handoff</b> is the most important decision — it defines how you close deals.</div>
       <div class="field"><label>WhatsApp operating hours</label>
         <div class="option-grid cols-2">
           <label class="opt-item opt-radio" data-group="hours" data-val="9am–6pm weekdays"><input type="radio"><span class="opt-text"><span class="opt-title">🕘 9am–6pm weekdays</span></span><span class="opt-check"></span></label>
@@ -339,6 +382,7 @@ footer { text-align: center; margin-top: 56px; font-size: 11px; color: #94a3b8; 
       <div class="step-label">Step 6 of 7</div>
       <div class="step-title">What does your business sell?</div>
       <div class="step-desc">So the AI speaks your language — not generic chatbot language.</div>
+      <div class="step-hint">💡 Your product names appear inside every AI message so conversations feel natural and on-brand — not like a bot. The more specific, the better the output.</div>
       <div class="field"><label>Key products or services <span style="color:#94a3b8;font-weight:400">(comma separated)</span></label>
         <textarea id="f-products" placeholder="e.g. Perodua service package, Honda Civic EOI deposit, test drive booking"></textarea>
       </div>
@@ -357,6 +401,7 @@ footer { text-align: center; margin-top: 56px; font-size: 11px; color: #94a3b8; 
       <div class="step-label">Step 7 of 7</div>
       <div class="step-title">Last step — your details</div>
       <div class="step-desc">So we can follow up and personalise your blueprint.</div>
+      <div class="step-hint">💡 Your name is used inside the blueprint to label who handles hot leads. Your WhatsApp number lets Benjamin send you the blueprint directly and follow up within 24h.</div>
       <div class="field"><label>Your Name</label><input type="text" id="f-name" placeholder="e.g. Ahmad, Siti, Bryan"></div>
       <div class="field"><label>Your WhatsApp Number</label><input type="tel" id="f-phone" placeholder="e.g. 0162393812"></div>
       <div class="field"><label>Business WhatsApp <span style="color:#94a3b8;font-weight:400">(the number receiving enquiries)</span></label><input type="tel" id="f-bizphone" placeholder="e.g. 0123456789"></div>
@@ -379,20 +424,18 @@ footer { text-align: center; margin-top: 56px; font-size: 11px; color: #94a3b8; 
 
   <div class="view-tabs">
     <button class="vtab active" id="tab-client" onclick="switchView('client')">📊 Visual Flowchart</button>
-    <button class="vtab" id="tab-blueprint" onclick="switchView('blueprint')">📋 Builder Blueprint</button>
+    <button class="vtab" id="tab-blueprint" onclick="switchView('blueprint')">🔒 Builder Blueprint</button>
   </div>
+  <div class="vtab-note" id="vtab-note">Share the <b>📊 Visual Flowchart</b> with your prospect · Keep <b>🔒 Builder Blueprint</b> for your build session</div>
 
   <div class="action-bar">
     <button class="btn-action btn-edit" onclick="editAnswers()">← Edit Answers</button>
     <button class="btn-action btn-share" onclick="shareLink()">📎 Copy Client Link</button>
     <button class="btn-action btn-print" onclick="window.print()">🖨️ Print / Save PDF</button>
-    <span class="share-msg" id="share-msg">✅ Link copied!</span>
+    <span class="share-msg" id="share-msg">✅ Link copied! Send to your prospect.</span>
   </div>
 
-  <!-- CLIENT FLOWCHART -->
   <div id="view-client"></div>
-
-  <!-- BUILDER BLUEPRINT -->
   <div id="view-blueprint"></div>
 </div>
 
@@ -437,11 +480,38 @@ function showStep(n) {
   document.getElementById('pg-fill').style.width=pct+'%';
   document.getElementById('btn-prev').disabled=n===1;
   const nb=document.getElementById('btn-next');
-  if (n===TOTAL) { nb.textContent='✨ Generate My Blueprint'; nb.onclick=generate; }
-  else { nb.textContent='Next →'; nb.onclick=nextStep; }
+  if (n===TOTAL) {
+    nb.textContent='✨ Generate My Blueprint';
+    nb.onclick=generate;
+    nb.classList.add('last-step');
+  } else {
+    nb.textContent='Next →';
+    nb.onclick=nextStep;
+    nb.classList.remove('last-step');
+  }
 }
 function nextStep() { if(cur<TOTAL){ collect(cur); cur++; showStep(cur); } }
 function prevStep() { if(cur>1){ cur--; showStep(cur); } }
+
+// ── CONFETTI ────────────────────────────────────────────
+function triggerConfetti() {
+  const colors = ['#2563eb','#f59e0b','#16a34a','#ea580c','#7c3aed','#ec4899','#06b6d4'];
+  for (let i = 0; i < 70; i++) {
+    const el = document.createElement('div');
+    el.className = 'confetti-piece';
+    const size = 5 + Math.random() * 7;
+    el.style.cssText = `
+      left:${Math.random()*100}vw;
+      background:${colors[Math.floor(Math.random()*colors.length)]};
+      animation-delay:${Math.random()*0.6}s;
+      animation-duration:${0.9+Math.random()*0.9}s;
+      width:${size}px; height:${size}px;
+      border-radius:${Math.random()>0.5?'50%':'2px'};
+    `;
+    document.body.appendChild(el);
+    setTimeout(()=>el.remove(), 2000);
+  }
+}
 
 // ── GENERATE ───────────────────────────────────────────
 async function generate() {
@@ -449,10 +519,10 @@ async function generate() {
   if (!d.flows.length) d.flows=['lead-qualify','follow-up'];
 
   const btn = document.getElementById('btn-next');
-  btn.textContent = '⏳ Generating…';
+  btn.textContent = '⏳ Building your AI system…';
   btn.disabled = true;
+  btn.classList.add('generating');
 
-  // Post to backend
   try {
     const res = await fetch('/api/submit', {
       method: 'POST',
@@ -465,17 +535,25 @@ async function generate() {
     generatedUrl = location.href;
   }
 
-  // Encode data in URL hash for sharing
   const hash = btoa(encodeURIComponent(JSON.stringify(d)));
   history.replaceState(null, '', '#' + hash);
 
   renderOutputs();
-  document.getElementById('form-wrap').style.display = 'none';
-  document.getElementById('out-wrap').style.display = 'block';
+
+  const fw = document.getElementById('form-wrap');
+  const ow = document.getElementById('out-wrap');
+  fw.style.display = 'none';
+  ow.classList.remove('visible');
+  ow.style.display = 'block';
+  void ow.offsetHeight;
+  ow.classList.add('visible');
   window.scrollTo(0, 0);
+
+  setTimeout(triggerConfetti, 200);
 
   btn.textContent = '✨ Generate My Blueprint';
   btn.disabled = false;
+  btn.classList.remove('generating');
 }
 
 function renderOutputs() {
@@ -499,12 +577,12 @@ function switchView(v) {
   document.getElementById('tab-client').classList.toggle('active', v==='client');
   document.getElementById('tab-blueprint').classList.toggle('active', v==='blueprint');
 }
-function editAnswers() { document.getElementById('out-wrap').style.display='none'; document.getElementById('form-wrap').style.display='flex'; window.scrollTo(0,0); }
+function editAnswers() { document.getElementById('out-wrap').style.display='none'; document.getElementById('out-wrap').classList.remove('visible'); document.getElementById('form-wrap').style.display='flex'; window.scrollTo(0,0); }
 function shareLink() {
   const url = generatedUrl || location.href;
   navigator.clipboard.writeText(url).then(()=>{
     const m=document.getElementById('share-msg'); m.style.display='inline';
-    setTimeout(()=>m.style.display='none',3000);
+    setTimeout(()=>m.style.display='none',4000);
   });
 }
 
@@ -525,7 +603,7 @@ function buildClientFlowchart(biz, name, prods) {
     'visit-invite':  `<div class="fc-box-t">🏢 AI Invites to Visit</div><div class="fc-box-s">Sends address, directions & invite</div>`
   }[d.handoff] || `<div class="fc-box-t">📞 ${name} Takes Over</div>`;
 
-  const a = (txt='') => `<div class="fc-arr">${txt||'↓'}</div>`;
+  const a   = () => `<div class="fc-arr">↓</div>`;
   const pill = (cls,t) => `<div class="fc-pill ${cls}">${t}</div>`;
   const box  = (cls,t,s='') => `<div class="fc-box ${cls}"><div class="fc-box-t">${t}</div>${s?`<div class="fc-box-s">${s}</div>`:''}</div>`;
   const dia  = (t) => `<div class="fc-diamond"><div class="fc-diamond-t">${t}</div></div>`;
@@ -608,6 +686,20 @@ function buildClientFlowchart(biz, name, prods) {
   if (hasLQ && hasOrd) extras.push(`<div style="background:#eff6ff;border:1.5px solid #93c5fd;border-radius:10px;padding:14px 18px;max-width:1100px;margin:12px auto 0;font-size:13px;color:#1d4ed8;font-weight:600">📦 <b>Order Intake</b> also active — customers can place WhatsApp orders anytime. AI parses, confirms, and logs to Google Sheet.</div>`);
   if (hasRen && (hasLQ || hasFU)) extras.push(`<div style="background:#faf5ff;border:1.5px solid #d8b4fe;border-radius:10px;padding:14px 18px;max-width:1100px;margin:12px auto 0;font-size:13px;color:#5b21b6;font-weight:600">🔄 <b>Renewal Reminders</b> also active — AI reminds clients at D30/D14/D7 before renewal. ${name} only steps in if needed.</div>`);
 
+  // ── PLG CTA ────────────────────────────────────────
+  const bizEncoded = encodeURIComponent(`Hi Benjamin, I just built my AI flow for ${biz} and want to see it live!`);
+  const plgCta = `
+  <div class="plg-cta">
+    <div class="plg-cta-text">
+      <div class="plg-cta-title">🚀 Ready to see this live for ${biz}?</div>
+      <div class="plg-cta-sub">Free 20-min call · We show you exactly how it runs · Live in 7 days</div>
+    </div>
+    <div class="plg-cta-actions">
+      <a class="btn-wa" href="https://wa.me/60162393812?text=${bizEncoded}" target="_blank">💬 WhatsApp Benjamin</a>
+      <span class="btn-cal-link" onclick="shareLink()">📎 Share This Blueprint</span>
+    </div>
+  </div>`;
+
   return `
   <div class="fc-outer">
     <div class="fc-layout">
@@ -626,7 +718,8 @@ function buildClientFlowchart(biz, name, prods) {
       </div>
     </div>
     ${extras.join('')}
-    <div style="text-align:center;margin-top:32px;font-size:11px;color:#94a3b8">${biz} · AI System Flowchart · ${d.flows.length} flow${d.flows.length>1?'s':''} · Built by Benjamin AI Agency</div>
+    ${plgCta}
+    <div style="text-align:center;margin-top:20px;font-size:11px;color:#94a3b8">${biz} · AI System Flowchart · ${d.flows.length} flow${d.flows.length>1?'s':''} · Built by Benjamin AI Agency</div>
   </div>`;
 }
 
@@ -648,6 +741,114 @@ function fcard(num,icon,title,tags,inH,prH,outH) {
       <div class="ipo-col"><div class="ipo-label"><span>📤</span> Output</div><div class="ipo-body">${outH}</div></div>
     </div>
   </div>${farr()}`;
+}
+
+function buildClaudeSpec(biz, name, prods, dateStr) {
+  const flowNames = {'lead-qualify':'Lead Qualify','follow-up':'Follow-Up Sequence','appointment':'Appointment Booking','order-intake':'Order Intake','renewal':'Renewal Reminder'};
+  const handoffMap = {'owner-call':`alert_owner_call — ${name} calls within 2h`,'calendar-link':'ai_books_calendar_slot','whatsapp-close':'ai_closes_in_chat','visit-invite':'ai_sends_visit_invite'};
+
+  const flowLines = d.flows.map((f,i) => {
+    let lines = `  <span class="sa">▸</span> <span class="sk">flow_${i+1}</span>: <span class="sv">"${flowNames[f]||f}"</span>`;
+    if (f==='lead-qualify') lines += `
+      <span class="sk">  trigger</span>: <span class="sv">"any_new_inbound_whatsapp_message"</span>
+      <span class="sk">  hours</span>:   <span class="sv">"${d.hours||'9am-6pm weekdays'}"</span>
+      <span class="sk">  qualify</span>:
+        <span class="sa">  Q1</span>: <span class="sv">"What exactly are you looking for?"</span>
+        <span class="sa">  Q2</span>: <span class="sv">"When do you need it?"</span>
+        <span class="sa">  Q3</span>: <span class="sv">"Are you the decision maker?"</span>
+      <span class="sk">  routing</span>:
+        <span class="sa">  hot</span>:  <span class="sv">"specific + urgent + DM → handoff"</span>
+        <span class="sa">  warm</span>: <span class="sv">"has need + unclear timing → nurture D3/D7"</span>
+        <span class="sa">  cold</span>: <span class="sv">"browsing + no urgency → archive"</span>
+      <span class="sk">  handoff</span>: <span class="sv">"${handoffMap[d.handoff]||'owner-call'}"</span>`;
+    if (f==='follow-up') lines += `
+      <span class="sk">  trigger</span>: <span class="sv">"48h_no_reply_after_first_contact"</span>
+      <span class="sk">  sequence</span>:
+        <span class="sa">  D3</span>:  <span class="sv">"social_proof_angle"</span>
+        <span class="sa">  D7</span>:  <span class="sv">"cost_of_doing_nothing"</span>
+        <span class="sa">  D30</span>: <span class="sv">"re_engage_fresh_angle"</span>
+      <span class="sk">  if_no_reply_after_D30</span>: <span class="sv">"archive_to_meta_ads"</span>`;
+    if (f==='appointment') lines += `
+      <span class="sk">  trigger</span>: <span class="sv">"booking_intent_keyword_detected"</span>
+      <span class="sk">  steps</span>:
+        <span class="sa">  1</span>: <span class="sv">"offer_available_slots"</span>
+        <span class="sa">  2</span>: <span class="sv">"confirm_booking + log_to_crm"</span>
+        <span class="sa">  3</span>: <span class="sv">"send_24h_reminder"</span>
+      <span class="sk">  no_show</span>: <span class="sv">"alert_${name.toLowerCase().replace(/\s+/g,'_')}"</span>`;
+    if (f==='order-intake') lines += `
+      <span class="sk">  trigger</span>: <span class="sv">"order_message_detected"</span>
+      <span class="sk">  steps</span>:
+        <span class="sa">  1</span>: <span class="sv">"parse_items_against_catalogue"</span>
+        <span class="sa">  2</span>: <span class="sv">"send_order_summary_for_confirm"</span>
+        <span class="sa">  3</span>: <span class="sv">"log_to_google_sheet + alert_owner"</span>
+      <span class="sk">  sheet_cols</span>: <span class="sv">"timestamp | customer_name | wa_number | items | qty | total"</span>`;
+    if (f==='renewal') lines += `
+      <span class="sk">  trigger</span>: <span class="sv">"renewal_date_in_crm_minus_30_days"</span>
+      <span class="sk">  sequence</span>:
+        <span class="sa">  D30</span>: <span class="sv">"friendly_heads_up"</span>
+        <span class="sa">  D14</span>: <span class="sv">"upgrade_offer"</span>
+        <span class="sa">  D7</span>:  <span class="sv">"urgency_message"</span>
+      <span class="sk">  no_confirm</span>: <span class="sv">"alert_${name.toLowerCase().replace(/\s+/g,'_')}_for_manual_call"</span>`;
+    return lines;
+  }).join('\n\n');
+
+  const prodList = prods.length ? prods.map(p=>`  <span class="sa">▸</span> <span class="sv">"${p}"</span>`).join('\n') : `  <span class="sa">▸</span> <span class="sv">"[add product names here]"</span>`;
+  const tmplBase = ['greeting_message','hot_lead_alert_to_owner'];
+  if (d.flows.includes('lead-qualify')) tmplBase.push('qualification_q1','qualification_q2','qualification_q3','case_study_d3','warm_nurture_d7');
+  if (d.flows.includes('follow-up')) tmplBase.push('follow_up_d3_social_proof','follow_up_d7_cost_of_waiting','re_engage_d30');
+  if (d.flows.includes('appointment')) tmplBase.push('booking_confirmation','24h_reminder');
+  if (d.flows.includes('order-intake')) tmplBase.push('order_summary_confirm','order_logged_receipt');
+  if (d.flows.includes('renewal')) tmplBase.push('renewal_d30','renewal_d14_upgrade','renewal_d7_urgency');
+  const tmplList = [...new Set(tmplBase)].map(t=>`  <span class="sa">▸</span> <span class="sv">"${t}"</span>`).join('\n');
+
+  const specText = `<span class="sh"># CLAUDE CODE BUILD SPEC — ${biz} WhatsApp AI</span>
+<span class="sc"># Generated: ${dateStr} · Paste this into Claude Code to start the build</span>
+
+<span class="sh">SYSTEM</span>:
+  <span class="sk">name</span>:     <span class="sv">"${biz} WhatsApp AI Agent"</span>
+  <span class="sk">platform</span>: <span class="sv">"ChatDaddy API + WhatsApp"</span>
+  <span class="sk">biz_type</span>: <span class="sv">"${d.bizType||'Business'}"</span>
+  <span class="sk">owner</span>:    <span class="sv">"${name}"</span>
+  <span class="sk">volume</span>:   <span class="sv">"${d.volume||'50-200'} messages/day"</span>
+  <span class="sk">deal_val</span>: <span class="sv">"${d.deal||'?'}"</span>
+
+<span class="sh">FLOWS</span>:
+${flowLines}
+
+<span class="sh">PRODUCT_CATALOGUE</span>:
+${prodList}
+
+<span class="sh">MESSAGE_TEMPLATES_TO_WRITE</span>:
+${tmplList}
+
+<span class="sh">INTEGRATIONS</span>:
+  <span class="sa">▸</span> <span class="sv">"ChatDaddy API"</span>  <span class="sc">← primary inbox + send API</span>
+  <span class="sa">▸</span> <span class="sv">"Google Sheets"</span>  <span class="sc">← order log / CRM (if order-intake or renewal)</span>
+  <span class="sa">▸</span> <span class="sv">"WhatsApp alerts → ${name}: +${(d.phone||'OWNER_NUMBER').replace(/\D/g,'')}"</span>
+
+<span class="sh">HANDOFF_PROTOCOL</span>:
+  <span class="sk">type</span>:    <span class="sv">"${d.handoff||'owner-call'}"</span>
+  <span class="sk">message</span>: <span class="sv">"🔴 Hot lead: [Name] · [Number] · [Intent summary] — call now."</span>
+  <span class="sk">sla</span>:     <span class="sv">"${d.handoff==='owner-call'?'owner calls within 2h':d.handoff==='calendar-link'?'AI books slot, owner gets calendar invite':d.handoff==='whatsapp-close'?'AI closes fully in chat':'AI drives visit, owner greets'}"</span>`;
+
+  const specId = 'spec-content-' + Date.now();
+  return `<div class="spec-wrap">
+    <div class="spec-header">
+      <div class="spec-dots"><div class="spec-dot r"></div><div class="spec-dot y"></div><div class="spec-dot g"></div></div>
+      <span class="spec-file">${biz.toLowerCase().replace(/\s+/g,'-')}-build-spec.txt — Paste into Claude Code</span>
+    </div>
+    <div class="spec-body" id="${specId}">${specText}</div>
+    <div class="spec-copy"><button class="btn-copy-spec" onclick="copySpec('${specId}')">📋 Copy Spec</button></div>
+  </div>`;
+}
+
+function copySpec(id) {
+  const el = document.getElementById(id);
+  const text = el ? el.innerText : '';
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = el.parentElement.querySelector('.btn-copy-spec');
+    if (btn) { btn.textContent = '✅ Copied!'; setTimeout(()=>btn.textContent='📋 Copy Spec',2500); }
+  });
 }
 
 function buildBlueprint(biz, name, prods, dateStr) {
@@ -676,7 +877,7 @@ function buildBlueprint(biz, name, prods, dateStr) {
   if (d.flows.includes('appointment')) {
     html += sHdr('📅 Flow 3 — Appointment Booking');
     html += fcard(1,'📅','Customer Requests Booking',ftag('client','📱 Customer')+ftag('bot','🤖 AI'),'Customer says "can I book", "when free", "want to come in"','AI detects booking intent. Asks preferred date/time.',`AI: "Sure! We have slots on [days]. What works?"`)
-    html += fcard(2,'✅','Confirm + 24h Reminder',ftag('bot','🤖 AI')+ftag('system','🗄️ CRM'),'Customer replies with preferred slot','AI confirms. Logs to CRM. Queues 24h reminder.',fbrs(fbr('yes','Confirms','✅ Appointment set'),fbr('warn','Reschedule',`AI re-offers slots`),fbr('neu','No reply',`${name} notified to call`)));
+    html += fcard(2,'✅','Confirm + 24h Reminder',ftag('bot','🤖 AI')+ftag('system','🗄️ CRM'),'Customer replies with preferred slot','AI confirms. Logs to CRM. Queues 24h reminder.',fbrs(fbr('yes','Confirms','✅ Appointment set'),fbr('warn','Reschedule','AI re-offers slots'),fbr('neu','No reply',`${name} notified to call`)));
   }
 
   if (d.flows.includes('order-intake')) {
@@ -691,7 +892,7 @@ function buildBlueprint(biz, name, prods, dateStr) {
     html += fcard(2,'📤','D14 + D7 + Handoff',ftag('bot','🤖 AI')+ftag('benjamin',`💼 ${name}`),'No confirmation after D30',`D14: upgrade offer. D7: urgency.`,fbrs(fbr('yes','Confirms','CRM updated'),fbr('warn','Wants to discuss',`${name} notified`),fbr('no','No response',`${name} manual call flagged`)));
   }
 
-  // Responsibility
+  // Responsibility grid
   const flowLabels = {'lead-qualify':'Qualify leads 24/7','follow-up':'Chase non-replies D3/D7/D30','appointment':'Book + confirm + remind','order-intake':'Take and log orders','renewal':'Renewal reminder sequence'};
   const aiItems = d.flows.map(f=>`<div class="resp-item"><span class="resp-dot">·</span>${flowLabels[f]||f}</div>`).join('');
 
@@ -709,6 +910,10 @@ function buildBlueprint(biz, name, prods, dateStr) {
     <div class="trow"><div class="tday"><div class="tday-l">Day 30</div><div class="tday-s">Review</div></div><div class="tline"><div class="tline-dot"></div><div class="tline-bar"></div></div><div class="tcontent"><div class="tc-title">Performance Review</div><div class="tc-body">Metrics reviewed. Messages tuned. Next flows planned.</div></div></div>
   </div>`;
 
+  // Claude Code build spec
+  html += sHdr('🤖 Claude Code Build Spec — Paste to Start Building');
+  html += buildClaudeSpec(biz, name, prods, dateStr);
+
   html += `<footer>${biz} · Builder Blueprint · Internal use only · Benjamin AI Agency · ${dateStr}</footer>`;
   return html;
 }
@@ -722,8 +927,9 @@ window.addEventListener('load', () => {
     if (!d.flows.length) d.flows=['lead-qualify','follow-up'];
     generatedUrl = location.href;
     renderOutputs();
+    const ow = document.getElementById('out-wrap');
     document.getElementById('form-wrap').style.display = 'none';
-    document.getElementById('out-wrap').style.display = 'block';
+    ow.classList.add('visible');
   } catch(e) {}
 });
 </script>
