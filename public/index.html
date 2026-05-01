@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Flow Builder</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f1f5f9; min-height: 100vh; color: #111827; }
+
+/* ─── FORM ─────────────────────────────────────────── */
+#form-wrap { min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 40px 16px 80px; }
+.form-header { text-align: center; margin-bottom: 28px; }
+.form-header h1 { font-size: 22px; font-weight: 800; color: #0f172a; }
+.form-header p { font-size: 13px; color: #64748b; margin-top: 6px; }
+
+.progress-wrap { width: 100%; max-width: 560px; margin-bottom: 20px; }
+.progress-labels { display: flex; justify-content: space-between; font-size: 10px; color: #94a3b8; margin-bottom: 6px; }
+.progress-bar { height: 4px; background: #e2e8f0; border-radius: 99px; overflow: hidden; }
+.progress-fill { height: 100%; background: #2563eb; border-radius: 99px; transition: width 0.35s ease; }
+
+.form-card { background: white; border-radius: 16px; border: 1.5px solid #e2e8f0; box-shadow: 0 2px 12px rgba(0,0,0,.06); width: 100%; max-width: 560px; padding: 28px 28px 24px; }
+.step-label { font-size: 10px; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase; color: #94a3b8; margin-bottom: 8px; }
+.step-title { font-size: 18px; font-weight: 800; color: #0f172a; margin-bottom: 6px; }
+.step-desc { font-size: 13px; color: #64748b; margin-bottom: 22px; line-height: 1.5; }
+
+.field { margin-bottom: 18px; }
+.field label { display: block; font-size: 12px; font-weight: 700; color: #374151; margin-bottom: 6px; }
+.field input[type="text"], .field input[type="tel"], .field textarea {
+  width: 100%; padding: 10px 14px; border: 1.5px solid #e2e8f0; border-radius: 8px;
+  font-size: 13px; font-family: inherit; color: #0f172a; outline: none; transition: border-color 0.2s;
+}
+.field input:focus, .field textarea:focus { border-color: #2563eb; }
+.field textarea { min-height: 80px; resize: vertical; }
+
+.option-grid { display: grid; gap: 10px; }
+.option-grid.cols-2 { grid-template-columns: 1fr 1fr; }
+@media (max-width: 460px) { .option-grid.cols-2 { grid-template-columns: 1fr; } }
+
+.opt-item { display: flex; align-items: flex-start; gap: 12px; padding: 12px 14px; border: 1.5px solid #e2e8f0; border-radius: 10px; cursor: pointer; transition: border-color 0.15s, background 0.15s; position: relative; user-select: none; }
+.opt-item:hover { border-color: #93c5fd; background: #f8fbff; }
+.opt-item.selected { border-color: #2563eb; background: #eff6ff; }
+.opt-item input { position: absolute; opacity: 0; width: 0; height: 0; }
+.opt-icon { font-size: 20px; flex-shrink: 0; }
+.opt-text { flex: 1; }
+.opt-title { font-size: 13px; font-weight: 700; color: #0f172a; }
+.opt-sub { font-size: 11px; color: #64748b; margin-top: 2px; line-height: 1.4; }
+.opt-check { width: 18px; height: 18px; border-radius: 4px; border: 2px solid #d1d5db; flex-shrink: 0; margin-top: 2px; display: flex; align-items: center; justify-content: center; transition: all 0.15s; font-size: 11px; font-weight: 800; color: white; }
+.opt-item.selected .opt-check { background: #2563eb; border-color: #2563eb; }
+.opt-item.selected .opt-check::after { content: '✓'; }
+.opt-radio .opt-check { border-radius: 50%; }
+.opt-radio.selected .opt-check::after { content: '•'; font-size: 14px; line-height: 1; }
+
+.form-nav { display: flex; justify-content: space-between; align-items: center; margin-top: 24px; padding-top: 20px; border-top: 1.5px solid #f1f5f9; }
+.btn-prev, .btn-next { padding: 10px 22px; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; border: none; transition: all 0.15s; }
+.btn-prev { background: #f1f5f9; color: #475569; }
+.btn-prev:hover:not(:disabled) { background: #e2e8f0; }
+.btn-prev:disabled { opacity: 0.35; cursor: default; }
+.btn-next { background: #2563eb; color: white; padding: 10px 28px; }
+.btn-next:hover { background: #1d4ed8; }
+.step-counter { font-size: 11px; color: #94a3b8; }
+
+/* ─── OUTPUT WRAP ───────────────────────────────────── */
+#out-wrap { display: none; padding: 28px 16px 80px; }
+
+.out-header { text-align: center; margin-bottom: 6px; }
+.out-header h1 { font-size: 20px; font-weight: 800; color: #0f172a; }
+.out-header p { font-size: 12px; color: #64748b; margin-top: 3px; }
+
+/* View toggle tabs */
+.view-tabs { display: flex; gap: 8px; justify-content: center; margin: 20px 0 28px; }
+.vtab { padding: 8px 20px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; border: 1.5px solid #e2e8f0; background: white; color: #64748b; transition: all 0.15s; }
+.vtab.active { background: #0f172a; color: white; border-color: #0f172a; }
+
+/* Action bar */
+.action-bar { max-width: 1100px; margin: 0 auto 28px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.btn-action { padding: 10px 18px; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; border: 1.5px solid transparent; transition: all 0.15s; }
+.btn-edit   { background: white; color: #475569; border-color: #e2e8f0; }
+.btn-edit:hover { background: #f8fafc; }
+.btn-share  { background: #2563eb; color: white; }
+.btn-share:hover { background: #1d4ed8; }
+.btn-print  { background: #1e293b; color: white; }
+.btn-print:hover { background: #0f172a; }
+.share-msg  { font-size: 12px; color: #16a34a; font-weight: 600; display: none; }
+
+/* ─── CLIENT FLOWCHART ──────────────────────────────── */
+#view-client { display: none; }
+.fc-outer { max-width: 1100px; margin: 0 auto; overflow-x: auto; }
+.fc-layout { display: flex; gap: 0; min-width: 700px; }
+
+/* Lanes */
+.fc-lane { flex: 1; display: flex; flex-direction: column; align-items: center; padding-bottom: 24px; }
+.fc-lane-bg-blue   { background: #eef6ff; border: 1.5px solid #bfdbfe; border-radius: 14px; }
+.fc-lane-bg-orange { background: #fff7ed; border: 1.5px solid #fed7aa; border-radius: 14px; }
+.fc-lane-hdr { width: 100%; border-radius: 12px 12px 0 0; padding: 13px 16px; font-size: 13px; font-weight: 800; color: white; text-align: center; margin-bottom: 20px; }
+.fc-lane-hdr.blue   { background: #2563eb; }
+.fc-lane-hdr.orange { background: #ea580c; }
+
+/* Gap corridor */
+.fc-gap { width: 64px; flex-shrink: 0; display: flex; flex-direction: column; align-items: center; padding-top: 56px; }
+.fc-gap-line { width: 2px; flex: 1; background: repeating-linear-gradient(to bottom, #f59e0b 0, #f59e0b 7px, transparent 7px, transparent 14px); margin: 8px 0; }
+.fc-gap-label { font-size: 8px; font-weight: 800; letter-spacing: 1.2px; text-transform: uppercase; color: #f59e0b; writing-mode: vertical-rl; text-orientation: mixed; }
+.fc-gap-note { font-size: 9px; font-weight: 700; color: #f59e0b; text-align: center; line-height: 1.3; margin-top: 8px; }
+
+/* Nodes */
+.fc-pill { border-radius: 50px; padding: 10px 20px; font-size: 13px; font-weight: 700; text-align: center; width: 88%; }
+.fc-pill.green  { background: #16a34a; color: white; }
+.fc-pill.blue   { background: #2563eb; color: white; }
+.fc-pill.gray   { background: #64748b; color: white; }
+
+.fc-box { border-radius: 8px; padding: 10px 14px; text-align: center; border: 1.5px solid; width: 88%; }
+.fc-box-t { font-size: 12px; font-weight: 700; }
+.fc-box-s { font-size: 10px; opacity: 0.8; margin-top: 3px; }
+.fc-box.ai    { background: #eff6ff; border-color: #2563eb; color: #1e40af; }
+.fc-box.ai-hl { background: #dbeafe; border-color: #2563eb; color: #1d4ed8; border-width: 2px; }
+.fc-box.owner { background: #faf5ff; border-color: #7c3aed; color: #5b21b6; }
+.fc-box.crm   { background: #f8fafc; border-color: #94a3b8; color: #475569; }
+.fc-box.sys   { background: #f0fdf4; border-color: #16a34a; color: #15803d; }
+
+/* Diamond */
+.fc-diamond { position: relative; width: 130px; height: 76px; margin: 0 auto; display: flex; align-items: center; justify-content: center; }
+.fc-diamond::before { content: ''; position: absolute; width: 70px; height: 70px; transform: rotate(45deg); background: #fffbeb; border: 1.5px solid #d97706; }
+.fc-diamond-t { position: relative; z-index: 1; font-size: 11px; font-weight: 700; color: #92400e; text-align: center; line-height: 1.3; padding: 0 14px; }
+
+/* Arrows */
+.fc-arr { display: flex; justify-content: center; height: 20px; align-items: center; color: #94a3b8; font-size: 15px; width: 100%; }
+.fc-arr-yes { height: 16px; display: flex; align-items: center; justify-content: center; gap: 4px; font-size: 9px; font-weight: 800; color: #f59e0b; }
+
+/* YES/NO labels beneath diamond */
+.fc-yn-row { display: flex; justify-content: space-between; width: 130px; margin: 0 auto; padding: 0 4px; }
+.fc-yn { font-size: 9px; font-weight: 800; }
+.fc-yn.yes { color: #f59e0b; }
+.fc-yn.no  { color: #ef4444; }
+
+/* Branch (Hot/Warm split) */
+.fc-branch { display: flex; gap: 8px; width: 92%; }
+.fc-branch-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 0; }
+.fc-b-label { font-size: 10px; font-weight: 800; padding: 3px 10px; border-radius: 20px; margin-bottom: 4px; }
+.fc-b-label.hot  { background: #fef2f2; color: #dc2626; border: 1px solid #fca5a5; }
+.fc-b-label.warm { background: #fffbeb; color: #b45309; border: 1px solid #fcd34d; }
+.fc-branch-col .fc-box { width: 100%; }
+
+/* Merge line */
+.fc-merge { position: relative; width: 88%; height: 24px; display: flex; justify-content: center; align-items: flex-end; }
+.fc-merge::before { content: ''; position: absolute; top: 0; left: 10%; right: 10%; height: 1.5px; background: #cbd5e1; }
+.fc-merge::after { content: '↓'; color: #94a3b8; font-size: 15px; }
+
+/* Close pill at bottom */
+.fc-close { border-radius: 50px; padding: 10px 20px; background: #16a34a; color: white; font-size: 13px; font-weight: 800; text-align: center; width: 88%; }
+
+/* ─── BLUEPRINT (IPO) ───────────────────────────────── */
+#view-blueprint { display: none; }
+
+.page-title { text-align: center; margin-bottom: 10px; }
+.page-title h1 { font-size: 20px; font-weight: 800; color: #0f172a; }
+.page-title p { font-size: 12px; color: #64748b; margin-top: 4px; }
+.legend { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin: 16px 0 32px; }
+.leg { display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; padding: 4px 12px; border-radius: 20px; border: 1.5px solid; }
+.leg-bot { background:#eff6ff; border-color:#93c5fd; color:#1d4ed8; }
+.leg-client { background:#f0fdfa; border-color:#5eead4; color:#0f766e; }
+.leg-benjamin { background:#faf5ff; border-color:#d8b4fe; color:#7c3aed; }
+.leg-system { background:#f8fafc; border-color:#cbd5e1; color:#475569; }
+.section-hdr { max-width: 960px; margin: 48px auto 20px; display: flex; align-items: center; gap: 12px; }
+.section-hdr-line { flex: 1; height: 1.5px; background: #e2e8f0; }
+.section-hdr-text { font-size: 11px; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase; color: #64748b; white-space: nowrap; padding: 0 4px; }
+.fm-card { max-width: 960px; margin: 0 auto 0; background: #fff; border-radius: 12px; border: 1.5px solid #e2e8f0; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,.06); }
+.fm-head { display: flex; align-items: center; gap: 10px; padding: 11px 18px; border-bottom: 1.5px solid #f1f5f9; }
+.fm-num { width: 24px; height: 24px; border-radius: 50%; background: #1e293b; color: #fff; font-size: 11px; font-weight: 800; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.fm-icon { font-size: 18px; flex-shrink: 0; }
+.fm-title { font-size: 14px; font-weight: 700; flex: 1; }
+.who-tags { display: flex; gap: 6px; flex-wrap: wrap; }
+.tag { font-size: 10px; font-weight: 700; padding: 2px 9px; border-radius: 10px; border: 1.5px solid; text-transform: uppercase; }
+.tag-bot { background:#eff6ff; border-color:#93c5fd; color:#1d4ed8; }
+.tag-client { background:#f0fdfa; border-color:#5eead4; color:#0f766e; }
+.tag-benjamin { background:#faf5ff; border-color:#d8b4fe; color:#7c3aed; }
+.tag-system { background:#f8fafc; border-color:#cbd5e1; color:#475569; }
+.ipo { display: flex; min-height: 80px; }
+.ipo-col { flex: 1; padding: 14px 16px; border-right: 1.5px solid #f1f5f9; }
+.ipo-col:last-child { border-right: none; }
+.ipo-label { font-size: 9px; font-weight: 800; letter-spacing: 1.2px; text-transform: uppercase; color: #94a3b8; margin-bottom: 7px; display: flex; align-items: center; gap: 5px; }
+.ipo-body { font-size: 12px; color: #374151; line-height: 1.6; }
+.ipo-body b { color: #0f172a; }
+@media (max-width: 640px) { .ipo { flex-direction: column; } .ipo-col { border-right: none; border-bottom: 1.5px solid #f1f5f9; } .ipo-col:last-child { border-bottom: none; } }
+.br-row { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+.br { flex: 1; min-width: 90px; border-radius: 6px; padding: 8px 10px; border: 1.5px solid; font-size: 11px; line-height: 1.5; }
+.br-yes { background:#f0fdf4; border-color:#86efac; color:#15803d; }
+.br-no  { background:#fef2f2; border-color:#fca5a5; color:#dc2626; }
+.br-warn { background:#fffbeb; border-color:#fcd34d; color:#b45309; }
+.br-neu { background:#f1f5f9; border-color:#cbd5e1; color:#475569; }
+.br-lbl { font-size: 10px; font-weight: 700; margin-bottom: 4px; text-transform: uppercase; }
+.fm-arr { display: flex; justify-content: center; align-items: center; height: 26px; color: #cbd5e1; font-size: 18px; max-width: 960px; margin: 0 auto; }
+.resp-grid { max-width: 960px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+@media (max-width: 700px) { .resp-grid { grid-template-columns: 1fr; } }
+.resp-card { background: #fff; border-radius: 12px; border: 1.5px solid #e2e8f0; overflow: hidden; }
+.resp-head { padding: 12px 18px; border-bottom: 1.5px solid #f1f5f9; font-size: 13px; font-weight: 800; }
+.resp-head.bot { background:#eff6ff; color:#1d4ed8; }
+.resp-head.client { background:#f0fdfa; color:#0f766e; }
+.resp-head.benjamin { background:#faf5ff; color:#7c3aed; }
+.resp-sec { padding: 12px 16px; border-bottom: 1px solid #f8fafc; }
+.resp-sec:last-child { border-bottom: none; }
+.resp-freq { font-size: 9px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; color: #94a3b8; margin-bottom: 8px; }
+.resp-item { display: flex; gap: 8px; margin-bottom: 7px; font-size: 12px; color: #374151; line-height: 1.4; }
+.resp-item:last-child { margin-bottom: 0; }
+.resp-dot { color: #94a3b8; flex-shrink: 0; }
+.tl { max-width: 960px; margin: 0 auto; }
+.trow { display: flex; align-items: stretch; }
+.tday { width: 72px; flex-shrink: 0; padding: 16px 12px 16px 0; text-align: right; }
+.tday-l { font-size: 11px; font-weight: 800; color: #0f172a; }
+.tday-s { font-size: 10px; color: #94a3b8; }
+.tline { width: 36px; flex-shrink: 0; display: flex; flex-direction: column; align-items: center; }
+.tline-dot { width: 12px; height: 12px; border-radius: 50%; background: #2563eb; flex-shrink: 0; margin-top: 20px; }
+.tline-bar { width: 2px; flex: 1; background: #e2e8f0; margin-top: 2px; }
+.trow:last-child .tline-bar { display: none; }
+.tcontent { flex: 1; padding: 16px 0 16px 12px; border-bottom: 1px solid #f1f5f9; }
+.trow:last-child .tcontent { border-bottom: none; }
+.tc-title { font-size: 13px; font-weight: 700; color: #0f172a; margin-bottom: 4px; }
+.tc-body { font-size: 12px; color: #64748b; line-height: 1.5; }
+
+footer { text-align: center; margin-top: 56px; font-size: 11px; color: #94a3b8; }
+
+@media print {
+  .action-bar, .view-tabs, #form-wrap { display: none !important; }
+  #out-wrap { display: block !important; padding: 16px; }
+  .vtab { display: none; }
+  #view-client, #view-blueprint { display: block !important; }
+  body { background: white; }
+}
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════ FORM ══════════════════════ -->
+<div id="form-wrap">
+  <div class="form-header">
+    <h1>🤖 AI Flow Builder</h1>
+    <p>7 quick questions → your custom AI system blueprint, ready in seconds.</p>
+  </div>
+  <div class="progress-wrap">
+    <div class="progress-labels"><span id="pg-step">Step 1 of 7</span><span id="pg-pct">14%</span></div>
+    <div class="progress-bar"><div class="progress-fill" id="pg-fill" style="width:14%"></div></div>
+  </div>
+
+  <div class="form-card">
+    <!-- Step 1 -->
+    <div class="form-step" id="step-1">
+      <div class="step-label">Step 1 of 7</div>
+      <div class="step-title">Tell us about your business</div>
+      <div class="step-desc">We'll use this to personalise every message in your blueprint.</div>
+      <div class="field"><label>Business Name</label><input type="text" id="f-bizname" placeholder="e.g. TM Motoworld, U Fresh, L'Artelier"></div>
+      <div class="field"><label>Business Type</label>
+        <div class="option-grid cols-2">
+          <label class="opt-item opt-radio" data-group="biztype" data-val="Motor Dealer"><input type="radio"><span class="opt-icon">🚗</span><span class="opt-text"><span class="opt-title">Motor Dealer</span><span class="opt-sub">Car/bike sales & service</span></span><span class="opt-check"></span></label>
+          <label class="opt-item opt-radio" data-group="biztype" data-val="F&B Supplier"><input type="radio"><span class="opt-icon">🥬</span><span class="opt-text"><span class="opt-title">F&B Supplier</span><span class="opt-sub">Food, veg, wholesale orders</span></span><span class="opt-check"></span></label>
+          <label class="opt-item opt-radio" data-group="biztype" data-val="Wedding / Events Venue"><input type="radio"><span class="opt-icon">💒</span><span class="opt-text"><span class="opt-title">Wedding / Events</span><span class="opt-sub">Venue, packages, bookings</span></span><span class="opt-check"></span></label>
+          <label class="opt-item opt-radio" data-group="biztype" data-val="Care / Confinement"><input type="radio"><span class="opt-icon">🏥</span><span class="opt-text"><span class="opt-title">Care / Confinement</span><span class="opt-sub">Health, wellness, personal care</span></span><span class="opt-check"></span></label>
+          <label class="opt-item opt-radio" data-group="biztype" data-val="Tech / SaaS"><input type="radio"><span class="opt-icon">💻</span><span class="opt-text"><span class="opt-title">Tech / SaaS</span><span class="opt-sub">Software, apps, digital tools</span></span><span class="opt-check"></span></label>
+          <label class="opt-item opt-radio" data-group="biztype" data-val="Retail / E-commerce"><input type="radio"><span class="opt-icon">🛍️</span><span class="opt-text"><span class="opt-title">Retail / E-commerce</span><span class="opt-sub">Products, online store</span></span><span class="opt-check"></span></label>
+          <label class="opt-item opt-radio" data-group="biztype" data-val="Property"><input type="radio"><span class="opt-icon">🏢</span><span class="opt-text"><span class="opt-title">Property</span><span class="opt-sub">Rental, sales, agents</span></span><span class="opt-check"></span></label>
+          <label class="opt-item opt-radio" data-group="biztype" data-val="Other"><input type="radio"><span class="opt-icon">📦</span><span class="opt-text"><span class="opt-title">Other</span><span class="opt-sub">Different industry</span></span><span class="opt-check"></span></label>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="form-step" id="step-2" style="display:none">
+      <div class="step-label">Step 2 of 7</div>
+      <div class="step-title">What's costing you the most?</div>
+      <div class="step-desc">Pick up to 3 — these become your priority flows.</div>
+      <div class="option-grid">
+        <label class="opt-item" data-group="pain" data-val="Too many enquiries"><input type="checkbox"><span class="opt-icon">📱</span><span class="opt-text"><span class="opt-title">Too many WhatsApp enquiries</span><span class="opt-sub">Can't reply fast enough, leads going cold</span></span><span class="opt-check"></span></label>
+        <label class="opt-item" data-group="pain" data-val="No follow-up system"><input type="checkbox"><span class="opt-icon">😶</span><span class="opt-text"><span class="opt-title">Leads come in but no follow-up</span><span class="opt-sub">Enquiries drop off and you forget to chase</span></span><span class="opt-check"></span></label>
+        <label class="opt-item" data-group="pain" data-val="Manual order taking"><input type="checkbox"><span class="opt-icon">📋</span><span class="opt-text"><span class="opt-title">Taking orders manually via WhatsApp</span><span class="opt-sub">Wrong items, missed orders, staff time wasted</span></span><span class="opt-check"></span></label>
+        <label class="opt-item" data-group="pain" data-val="Appointment chaos"><input type="checkbox"><span class="opt-icon">📅</span><span class="opt-text"><span class="opt-title">Appointment booking is chaotic</span><span class="opt-sub">No-shows, double bookings, manual reminders</span></span><span class="opt-check"></span></label>
+        <label class="opt-item" data-group="pain" data-val="Silent churn"><input type="checkbox"><span class="opt-icon">🔄</span><span class="opt-text"><span class="opt-title">Renewals forgotten, clients churn silently</span><span class="opt-sub">No reminder system, lose repeat business</span></span><span class="opt-check"></span></label>
+        <label class="opt-item" data-group="pain" data-val="Staff on repetitive messages"><input type="checkbox"><span class="opt-icon">👷</span><span class="opt-text"><span class="opt-title">Staff spending hours on same questions</span><span class="opt-sub">Pricing, hours, availability — answered 50x/day</span></span><span class="opt-check"></span></label>
+      </div>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="form-step" id="step-3" style="display:none">
+      <div class="step-label">Step 3 of 7</div>
+      <div class="step-title">How busy is your WhatsApp?</div>
+      <div class="step-desc">Helps us size the system right.</div>
+      <div class="field"><label>Daily messages received</label>
+        <div class="option-grid">
+          <label class="opt-item opt-radio" data-group="volume" data-val="Under 50"><input type="radio"><span class="opt-icon">🟢</span><span class="opt-text"><span class="opt-title">Under 50 messages/day</span><span class="opt-sub">Manageable but still time-consuming</span></span><span class="opt-check"></span></label>
+          <label class="opt-item opt-radio" data-group="volume" data-val="50–200"><input type="radio"><span class="opt-icon">🟡</span><span class="opt-text"><span class="opt-title">50–200 messages/day</span><span class="opt-sub">Need a system — too many to handle manually</span></span><span class="opt-check"></span></label>
+          <label class="opt-item opt-radio" data-group="volume" data-val="200+"><input type="radio"><span class="opt-icon">🔴</span><span class="opt-text"><span class="opt-title">200+ messages/day</span><span class="opt-sub">Overwhelmed — AI is essential</span></span><span class="opt-check"></span></label>
+        </div>
+      </div>
+      <div class="field"><label>How soon do you need this live?</label>
+        <div class="option-grid cols-2">
+          <label class="opt-item opt-radio" data-group="urgency" data-val="This month"><input type="radio"><span class="opt-text"><span class="opt-title">🔥 This month</span></span><span class="opt-check"></span></label>
+          <label class="opt-item opt-radio" data-group="urgency" data-val="Next 3 months"><input type="radio"><span class="opt-text"><span class="opt-title">📆 Next 3 months</span></span><span class="opt-check"></span></label>
+          <label class="opt-item opt-radio" data-group="urgency" data-val="Just exploring"><input type="radio"><span class="opt-text"><span class="opt-title">🔍 Just exploring</span></span><span class="opt-check"></span></label>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="form-step" id="step-4" style="display:none">
+      <div class="step-label">Step 4 of 7</div>
+      <div class="step-title">Which AI flows do you need?</div>
+      <div class="step-desc">Each one becomes a section in your blueprint. Select all that apply.</div>
+      <div class="option-grid">
+        <label class="opt-item" data-group="flows" data-val="lead-qualify"><input type="checkbox"><span class="opt-icon">🔍</span><span class="opt-text"><span class="opt-title">Lead Qualify</span><span class="opt-sub">AI qualifies new leads 24/7 — scores intent, routes hot/warm/cold</span></span><span class="opt-check"></span></label>
+        <label class="opt-item" data-group="flows" data-val="follow-up"><input type="checkbox"><span class="opt-icon">📤</span><span class="opt-text"><span class="opt-title">Follow-Up Sequence</span><span class="opt-sub">AI chases non-replies automatically — Day 3 / 7 / 30</span></span><span class="opt-check"></span></label>
+        <label class="opt-item" data-group="flows" data-val="appointment"><input type="checkbox"><span class="opt-icon">📅</span><span class="opt-text"><span class="opt-title">Appointment Booking</span><span class="opt-sub">AI books, confirms, and sends 24h reminders</span></span><span class="opt-check"></span></label>
+        <label class="opt-item" data-group="flows" data-val="order-intake"><input type="checkbox"><span class="opt-icon">📦</span><span class="opt-text"><span class="opt-title">Order Intake</span><span class="opt-sub">AI takes orders via WhatsApp, confirms, logs to Google Sheet</span></span><span class="opt-check"></span></label>
+        <label class="opt-item" data-group="flows" data-val="renewal"><input type="checkbox"><span class="opt-icon">🔄</span><span class="opt-text"><span class="opt-title">Renewal Reminder</span><span class="opt-sub">AI reminds clients at D30 / D14 / D7 before contract ends</span></span><span class="opt-check"></span></label>
+      </div>
+    </div>
+
+    <!-- Step 5 -->
+    <div class="form-step" id="step-5" style="display:none">
+      <div class="step-label">Step 5 of 7</div>
+      <div class="step-title">How does your business operate?</div>
+      <div class="step-desc">Defines when AI is on and what happens when a hot lead is found.</div>
+      <div class="field"><label>WhatsApp operating hours</label>
+        <div class="option-grid cols-2">
+          <label class="opt-item opt-radio" data-group="hours" data-val="9am–6pm weekdays"><input type="radio"><span class="opt-text"><span class="opt-title">🕘 9am–6pm weekdays</span></span><span class="opt-check"></span></label>
+          <label class="opt-item opt-radio" data-group="hours" data-val="9am–10pm daily"><input type="radio"><span class="opt-text"><span class="opt-title">🌙 9am–10pm daily</span></span><span class="opt-check"></span></label>
+          <label class="opt-item opt-radio" data-group="hours" data-val="24/7"><input type="radio"><span class="opt-text"><span class="opt-title">⚡ 24/7 always on</span></span><span class="opt-check"></span></label>
+          <label class="opt-item opt-radio" data-group="hours" data-val="Weekdays only"><input type="radio"><span class="opt-text"><span class="opt-title">📅 Weekdays only</span></span><span class="opt-check"></span></label>
+        </div>
+      </div>
+      <div class="field"><label>When a hot lead is found — what happens next?</label>
+        <div class="option-grid">
+          <label class="opt-item opt-radio" data-group="handoff" data-val="owner-call"><input type="radio"><span class="opt-icon">📞</span><span class="opt-text"><span class="opt-title">You call the lead within 2 hours</span><span class="opt-sub">AI alerts you, you make the call</span></span><span class="opt-check"></span></label>
+          <label class="opt-item opt-radio" data-group="handoff" data-val="calendar-link"><input type="radio"><span class="opt-icon">📆</span><span class="opt-text"><span class="opt-title">AI books a slot via calendar link</span><span class="opt-sub">Lead picks a time, you get the appointment</span></span><span class="opt-check"></span></label>
+          <label class="opt-item opt-radio" data-group="handoff" data-val="whatsapp-close"><input type="radio"><span class="opt-icon">💬</span><span class="opt-text"><span class="opt-title">AI closes the deal via WhatsApp</span><span class="opt-sub">Entire sale happens in chat</span></span><span class="opt-check"></span></label>
+          <label class="opt-item opt-radio" data-group="handoff" data-val="visit-invite"><input type="radio"><span class="opt-icon">🏢</span><span class="opt-text"><span class="opt-title">Invite to visit showroom / venue</span><span class="opt-sub">AI drives foot traffic to your location</span></span><span class="opt-check"></span></label>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 6 -->
+    <div class="form-step" id="step-6" style="display:none">
+      <div class="step-label">Step 6 of 7</div>
+      <div class="step-title">What does your business sell?</div>
+      <div class="step-desc">So the AI speaks your language — not generic chatbot language.</div>
+      <div class="field"><label>Key products or services <span style="color:#94a3b8;font-weight:400">(comma separated)</span></label>
+        <textarea id="f-products" placeholder="e.g. Perodua service package, Honda Civic EOI deposit, test drive booking"></textarea>
+      </div>
+      <div class="field"><label>Average deal / transaction value</label>
+        <div class="option-grid cols-2">
+          <label class="opt-item opt-radio" data-group="deal" data-val="Under RM500"><input type="radio"><span class="opt-text"><span class="opt-title">💰 Under RM500</span></span><span class="opt-check"></span></label>
+          <label class="opt-item opt-radio" data-group="deal" data-val="RM500–2,000"><input type="radio"><span class="opt-text"><span class="opt-title">💰💰 RM500–2,000</span></span><span class="opt-check"></span></label>
+          <label class="opt-item opt-radio" data-group="deal" data-val="RM2,000–10,000"><input type="radio"><span class="opt-text"><span class="opt-title">💰💰💰 RM2,000–10,000</span></span><span class="opt-check"></span></label>
+          <label class="opt-item opt-radio" data-group="deal" data-val="RM10,000+"><input type="radio"><span class="opt-text"><span class="opt-title">🏆 RM10,000+</span></span><span class="opt-check"></span></label>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 7 -->
+    <div class="form-step" id="step-7" style="display:none">
+      <div class="step-label">Step 7 of 7</div>
+      <div class="step-title">Last step — your details</div>
+      <div class="step-desc">So we can follow up and personalise your blueprint.</div>
+      <div class="field"><label>Your Name</label><input type="text" id="f-name" placeholder="e.g. Ahmad, Siti, Bryan"></div>
+      <div class="field"><label>Your WhatsApp Number</label><input type="tel" id="f-phone" placeholder="e.g. 0162393812"></div>
+      <div class="field"><label>Business WhatsApp <span style="color:#94a3b8;font-weight:400">(the number receiving enquiries)</span></label><input type="tel" id="f-bizphone" placeholder="e.g. 0123456789"></div>
+    </div>
+
+    <div class="form-nav">
+      <button class="btn-prev" id="btn-prev" onclick="prevStep()" disabled>← Back</button>
+      <span class="step-counter" id="step-counter">1 / 7</span>
+      <button class="btn-next" id="btn-next" onclick="nextStep()">Next →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════ OUTPUT ══════════════════════ -->
+<div id="out-wrap">
+  <div class="out-header">
+    <h1 id="out-title">AI System Blueprint</h1>
+    <p id="out-sub"></p>
+  </div>
+
+  <div class="view-tabs">
+    <button class="vtab active" id="tab-client" onclick="switchView('client')">📊 Visual Flowchart</button>
+    <button class="vtab" id="tab-blueprint" onclick="switchView('blueprint')">📋 Builder Blueprint</button>
+  </div>
+
+  <div class="action-bar">
+    <button class="btn-action btn-edit" onclick="editAnswers()">← Edit Answers</button>
+    <button class="btn-action btn-share" onclick="shareLink()">📎 Copy Client Link</button>
+    <button class="btn-action btn-print" onclick="window.print()">🖨️ Print / Save PDF</button>
+    <span class="share-msg" id="share-msg">✅ Link copied!</span>
+  </div>
+
+  <!-- CLIENT FLOWCHART -->
+  <div id="view-client"></div>
+
+  <!-- BUILDER BLUEPRINT -->
+  <div id="view-blueprint"></div>
+</div>
+
+<script>
+let cur = 1;
+const TOTAL = 7;
+const d = { bizName:'', bizType:'', pain:[], volume:'', urgency:'', flows:[], hours:'', handoff:'', products:'', deal:'', name:'', phone:'', bizPhone:'' };
+let generatedUrl = '';
+
+// ── FORM INTERACTIONS ──────────────────────────────────
+document.querySelectorAll('.opt-item').forEach(el => {
+  el.addEventListener('click', () => {
+    const g = el.dataset.group, isRadio = el.classList.contains('opt-radio');
+    if (isRadio) {
+      document.querySelectorAll(`.opt-item[data-group="${g}"]`).forEach(x => x.classList.remove('selected'));
+      el.classList.add('selected');
+    } else {
+      const sel = document.querySelectorAll(`.opt-item.selected[data-group="${g}"]`);
+      if (!el.classList.contains('selected') && g === 'pain' && sel.length >= 3) return;
+      el.classList.toggle('selected');
+    }
+  });
+});
+
+function collect(n) {
+  if (n===1) { d.bizName=document.getElementById('f-bizname').value.trim()||'Your Business'; const s=document.querySelector('.opt-item.selected[data-group="biztype"]'); d.bizType=s?s.dataset.val:'Business'; }
+  if (n===2) { d.pain=[...document.querySelectorAll('.opt-item.selected[data-group="pain"]')].map(x=>x.dataset.val); }
+  if (n===3) { const v=document.querySelector('.opt-item.selected[data-group="volume"]'); d.volume=v?v.dataset.val:'50–200'; const u=document.querySelector('.opt-item.selected[data-group="urgency"]'); d.urgency=u?u.dataset.val:''; }
+  if (n===4) { d.flows=[...document.querySelectorAll('.opt-item.selected[data-group="flows"]')].map(x=>x.dataset.val); }
+  if (n===5) { const h=document.querySelector('.opt-item.selected[data-group="hours"]'); d.hours=h?h.dataset.val:'9am–6pm weekdays'; const hf=document.querySelector('.opt-item.selected[data-group="handoff"]'); d.handoff=hf?hf.dataset.val:'owner-call'; }
+  if (n===6) { d.products=document.getElementById('f-products').value.trim(); const dv=document.querySelector('.opt-item.selected[data-group="deal"]'); d.deal=dv?dv.dataset.val:''; }
+  if (n===7) { d.name=document.getElementById('f-name').value.trim(); d.phone=document.getElementById('f-phone').value.trim(); d.bizPhone=document.getElementById('f-bizphone').value.trim(); }
+}
+
+function showStep(n) {
+  document.querySelectorAll('.form-step').forEach(s=>s.style.display='none');
+  document.getElementById(`step-${n}`).style.display='block';
+  document.getElementById('step-counter').textContent=`${n} / ${TOTAL}`;
+  document.getElementById('pg-step').textContent=`Step ${n} of ${TOTAL}`;
+  const pct=Math.round(n/TOTAL*100);
+  document.getElementById('pg-pct').textContent=pct+'%';
+  document.getElementById('pg-fill').style.width=pct+'%';
+  document.getElementById('btn-prev').disabled=n===1;
+  const nb=document.getElementById('btn-next');
+  if (n===TOTAL) { nb.textContent='✨ Generate My Blueprint'; nb.onclick=generate; }
+  else { nb.textContent='Next →'; nb.onclick=nextStep; }
+}
+function nextStep() { if(cur<TOTAL){ collect(cur); cur++; showStep(cur); } }
+function prevStep() { if(cur>1){ cur--; showStep(cur); } }
+
+// ── GENERATE ───────────────────────────────────────────
+async function generate() {
+  collect(7);
+  if (!d.flows.length) d.flows=['lead-qualify','follow-up'];
+
+  const btn = document.getElementById('btn-next');
+  btn.textContent = '⏳ Generating…';
+  btn.disabled = true;
+
+  // Post to backend
+  try {
+    const res = await fetch('/api/submit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(d)
+    });
+    const json = await res.json();
+    generatedUrl = json.shareUrl || location.href;
+  } catch(e) {
+    generatedUrl = location.href;
+  }
+
+  // Encode data in URL hash for sharing
+  const hash = btoa(encodeURIComponent(JSON.stringify(d)));
+  history.replaceState(null, '', '#' + hash);
+
+  renderOutputs();
+  document.getElementById('form-wrap').style.display = 'none';
+  document.getElementById('out-wrap').style.display = 'block';
+  window.scrollTo(0, 0);
+
+  btn.textContent = '✨ Generate My Blueprint';
+  btn.disabled = false;
+}
+
+function renderOutputs() {
+  const biz  = d.bizName || 'Your Business';
+  const name = d.name || 'You';
+  const prods = d.products ? d.products.split(',').map(s=>s.trim()).filter(Boolean) : [];
+  const dateStr = new Date().toLocaleDateString('en-MY',{day:'numeric',month:'short',year:'numeric'});
+
+  document.getElementById('out-title').textContent = `${biz} — AI System`;
+  document.getElementById('out-sub').textContent = `${d.bizType||'Business'} · ${d.flows.length} flow${d.flows.length>1?'s':''} · ${dateStr}`;
+
+  document.getElementById('view-client').innerHTML = buildClientFlowchart(biz, name, prods);
+  document.getElementById('view-blueprint').innerHTML = buildBlueprint(biz, name, prods, dateStr);
+  switchView('client');
+}
+
+// ── VIEW TOGGLE ────────────────────────────────────────
+function switchView(v) {
+  document.getElementById('view-client').style.display    = v==='client'    ? 'block' : 'none';
+  document.getElementById('view-blueprint').style.display = v==='blueprint' ? 'block' : 'none';
+  document.getElementById('tab-client').classList.toggle('active', v==='client');
+  document.getElementById('tab-blueprint').classList.toggle('active', v==='blueprint');
+}
+function editAnswers() { document.getElementById('out-wrap').style.display='none'; document.getElementById('form-wrap').style.display='flex'; window.scrollTo(0,0); }
+function shareLink() {
+  const url = generatedUrl || location.href;
+  navigator.clipboard.writeText(url).then(()=>{
+    const m=document.getElementById('share-msg'); m.style.display='inline';
+    setTimeout(()=>m.style.display='none',3000);
+  });
+}
+
+// ══════════════════════════════════════════════════════
+// CLIENT FLOWCHART
+// ══════════════════════════════════════════════════════
+function buildClientFlowchart(biz, name, prods) {
+  const hasLQ  = d.flows.includes('lead-qualify');
+  const hasFU  = d.flows.includes('follow-up');
+  const hasApt = d.flows.includes('appointment');
+  const hasOrd = d.flows.includes('order-intake');
+  const hasRen = d.flows.includes('renewal');
+
+  const handoffBox = {
+    'owner-call':    `<div class="fc-box-t">📞 ${name} Calls Lead</div><div class="fc-box-s">AI alerts you → you call within 2h</div>`,
+    'calendar-link': `<div class="fc-box-t">📆 AI Books a Slot</div><div class="fc-box-s">Lead picks time via calendar link</div>`,
+    'whatsapp-close':`<div class="fc-box-t">💬 AI Closes in Chat</div><div class="fc-box-s">Full sale happens via WhatsApp</div>`,
+    'visit-invite':  `<div class="fc-box-t">🏢 AI Invites to Visit</div><div class="fc-box-s">Sends address, directions & invite</div>`
+  }[d.handoff] || `<div class="fc-box-t">📞 ${name} Takes Over</div>`;
+
+  const a = (txt='') => `<div class="fc-arr">${txt||'↓'}</div>`;
+  const pill = (cls,t) => `<div class="fc-pill ${cls}">${t}</div>`;
+  const box  = (cls,t,s='') => `<div class="fc-box ${cls}"><div class="fc-box-t">${t}</div>${s?`<div class="fc-box-s">${s}</div>`:''}</div>`;
+  const dia  = (t) => `<div class="fc-diamond"><div class="fc-diamond-t">${t}</div></div>`;
+  const yn   = (y,n) => `<div class="fc-yn-row"><div class="fc-yn yes">✅ ${y}</div><div class="fc-yn no">❌ ${n}</div></div>`;
+
+  // ── LEFT LANE ──────────────────────────────────────
+  let left = '';
+  if (hasLQ) {
+    left += a() + pill('green','📱 New Lead Arrives');
+    left += a() + box('ai','🤖 AI First Response',`Replies in &lt;60 sec · ${d.hours||'9am–6pm'}`);
+    left += a() + box('ai-hl','🔍 AI Qualifies Lead','3 questions · intent scored');
+    left += a() + dia('Intent<br>Score?');
+    left += yn('Hot →','Warm →');
+    left += `<div class="fc-branch">
+      <div class="fc-branch-col"><div class="fc-b-label hot">🔴 Hot</div>${a()}<div class="fc-box sys" style="width:100%">${handoffBox}</div></div>
+      <div class="fc-branch-col"><div class="fc-b-label warm">🟡 Warm</div>${a()}<div class="fc-box ai" style="width:100%"><div class="fc-box-t">📎 Nurture Sequence</div><div class="fc-box-s">Case study D0 · D3 · D7</div></div></div>
+    </div>`;
+    left += `<div class="fc-merge"></div>`;
+    left += box('owner',`💼 ${name}'s Discovery Call`,'ROI · fit · close decision');
+    left += a() + box('ai','📄 Proposal Sent','AI follows up D1 · D3 · D7');
+    left += a() + dia('Prospect<br>Replies?');
+    left += yn('Close →','Dormant');
+    left += a() + `<div class="fc-close">🎉 CLOSE → Onboard</div>`;
+  } else if (hasApt) {
+    left += a() + pill('blue','📱 Customer Asks to Book');
+    left += a() + box('ai','🤖 AI Offers Available Slots','Asks for preferred date/time');
+    left += a() + box('ai','✅ Booking Confirmed','Confirmation + address sent');
+    left += a() + box('ai','🔔 24-Hour Reminder','Auto-sent · asks for confirm');
+    left += a() + dia('Confirms?');
+    left += yn('✓ Set','Reschedule');
+    left += a() + `<div class="fc-close">📅 Appointment Confirmed</div>`;
+  } else if (hasOrd) {
+    left += a() + pill('blue','📦 Customer Sends Order');
+    left += a() + box('ai','🤖 AI Parses Order','Reads items, qty, matches catalogue');
+    left += a() + box('ai','🔍 Confirms Order Summary','Sends clean list to customer');
+    left += a() + dia('Confirms?');
+    left += yn('Log it','Clarify');
+    left += a() + `<div class="fc-close">📊 Order Logged to Sheet</div>`;
+  } else {
+    left += a() + pill('blue','📱 Customer Messages');
+    left += a() + box('ai','🤖 AI Handles Automatically','24/7 · no staff needed');
+    left += a() + `<div class="fc-close">✅ Resolved</div>`;
+  }
+
+  // ── RIGHT LANE ─────────────────────────────────────
+  let right = '';
+  if (hasFU) {
+    right += a() + pill('blue','📤 Outreach Sent');
+    right += a() + dia('Reply<br>in 48h?');
+    right += yn('↩ Re-qualify','No reply');
+    right += a() + box('ai','📤 Day 3 Follow-up','Social proof angle');
+    right += a() + dia('Reply?');
+    right += yn('↩ Re-qualify','No reply');
+    right += a() + box('ai','📤 Day 7 Follow-up','Cost of doing nothing');
+    right += a() + dia('Reply?');
+    right += yn('↩ Re-qualify','No reply');
+    right += a() + box('crm','📦 Dormant Tagged','CRM logged · no spam');
+    right += a() + box('ai','🔄 Day 30 Re-engage','Fresh angle · new case study');
+    right += a() + dia('Reply?');
+    right += yn('↩ Re-qualify','No reply');
+    right += a() + pill('gray','🗃 Archive → Meta Ads');
+  } else if (hasRen) {
+    right += a() + pill('blue','📅 Renewal Due in 30 Days');
+    right += a() + box('ai','🤖 D30 Reminder Sent','Friendly heads-up message');
+    right += a() + box('ai','📤 D14 + D7 Reminders','Upgrade offer · urgency');
+    right += a() + dia('Confirmed?');
+    right += yn('✅ Renewed','Discuss');
+    right += a() + box('owner',`💼 ${name}'s Retention Call`,'Full client history in CRM');
+    right += a() + `<div class="fc-close">🔄 Renewal Saved</div>`;
+  } else {
+    right += a() + pill('blue','📤 No Reply Detected');
+    right += a() + box('ai','🤖 AI Manages Follow-up','D3 · D7 · D30 automated');
+    right += a() + box('crm','📦 CRM Updated','All history logged');
+    right += a() + pill('gray','🗃 Archive if No Reply');
+  }
+
+  // ── FLOW SUMMARY STRIPS ────────────────────────────
+  const extras = [];
+  if (hasLQ && hasApt) extras.push(`<div style="background:#f0fdf4;border:1.5px solid #86efac;border-radius:10px;padding:14px 18px;max-width:1100px;margin:20px auto 0;font-size:13px;color:#15803d;font-weight:600">📅 <b>Appointment Booking</b> also active — when qualified leads ask to book, AI handles slots, confirmation & 24h reminder automatically.</div>`);
+  if (hasLQ && hasOrd) extras.push(`<div style="background:#eff6ff;border:1.5px solid #93c5fd;border-radius:10px;padding:14px 18px;max-width:1100px;margin:12px auto 0;font-size:13px;color:#1d4ed8;font-weight:600">📦 <b>Order Intake</b> also active — customers can place WhatsApp orders anytime. AI parses, confirms, and logs to Google Sheet.</div>`);
+  if (hasRen && (hasLQ || hasFU)) extras.push(`<div style="background:#faf5ff;border:1.5px solid #d8b4fe;border-radius:10px;padding:14px 18px;max-width:1100px;margin:12px auto 0;font-size:13px;color:#5b21b6;font-weight:600">🔄 <b>Renewal Reminders</b> also active — AI reminds clients at D30/D14/D7 before renewal. ${name} only steps in if needed.</div>`);
+
+  return `
+  <div class="fc-outer">
+    <div class="fc-layout">
+      <div class="fc-lane fc-lane-bg-blue">
+        <div class="fc-lane-hdr blue">① Engaged Lead — Hot &amp; Warm Path</div>
+        ${left}
+      </div>
+      <div class="fc-gap">
+        <div class="fc-gap-label">Reply Highway</div>
+        <div class="fc-gap-line"></div>
+        <div class="fc-gap-note">Any reply<br>↩ re-enters<br>AI Qualify</div>
+      </div>
+      <div class="fc-lane fc-lane-bg-orange">
+        <div class="fc-lane-hdr orange">② Non-Engaged — Follow-up Sequence</div>
+        ${right}
+      </div>
+    </div>
+    ${extras.join('')}
+    <div style="text-align:center;margin-top:32px;font-size:11px;color:#94a3b8">${biz} · AI System Flowchart · ${d.flows.length} flow${d.flows.length>1?'s':''} · Built by Benjamin AI Agency</div>
+  </div>`;
+}
+
+// ══════════════════════════════════════════════════════
+// BUILDER BLUEPRINT (IPO format — private)
+// ══════════════════════════════════════════════════════
+const sHdr = t => `<div class="section-hdr"><div class="section-hdr-line"></div><div class="section-hdr-text">${t}</div><div class="section-hdr-line"></div></div>`;
+const farr = () => `<div class="fm-arr">↓</div>`;
+const ftag = (c,t) => `<span class="tag tag-${c}">${t}</span>`;
+const fbr  = (c,l,t) => `<div class="br br-${c}"><div class="br-lbl">${l}</div>${t}</div>`;
+const fbrs = (...a) => `<div class="br-row">${a.join('')}</div>`;
+
+function fcard(num,icon,title,tags,inH,prH,outH) {
+  return `<div class="fm-card">
+    <div class="fm-head"><div class="fm-num">${num}</div><div class="fm-icon">${icon}</div><div class="fm-title">${title}</div><div class="who-tags">${tags}</div></div>
+    <div class="ipo">
+      <div class="ipo-col"><div class="ipo-label"><span>📥</span> Input</div><div class="ipo-body">${inH}</div></div>
+      <div class="ipo-col"><div class="ipo-label"><span>⚙️</span> Process</div><div class="ipo-body">${prH}</div></div>
+      <div class="ipo-col"><div class="ipo-label"><span>📤</span> Output</div><div class="ipo-body">${outH}</div></div>
+    </div>
+  </div>${farr()}`;
+}
+
+function buildBlueprint(biz, name, prods, dateStr) {
+  const p = prods.length ? prods.slice(0,2).join(', ') : 'your products/services';
+  const handoffDetail = {'owner-call':`AI alerts ${name} immediately. ${name} calls within 2h.`,'calendar-link':`AI sends calendar link. Lead books a slot. ${name} gets the appointment.`,'whatsapp-close':'AI continues conversation and closes the deal in chat.','visit-invite':`AI sends ${biz} address + directions. Invites lead to visit.`}[d.handoff]||`${name} takes over.`;
+
+  let html = `<div class="page-title"><h1>🔒 Builder Blueprint — ${biz}</h1><p>Internal build document · ${d.bizType||'Business'} · ${d.flows.length} flows · ${dateStr} · Not for client sharing</p></div>
+  <div class="legend"><div class="leg leg-bot">🤖 AI</div><div class="leg leg-client">📱 Customer</div><div class="leg leg-benjamin">💼 ${name}</div><div class="leg leg-system">🗄️ CRM</div></div>`;
+
+  if (d.flows.includes('lead-qualify')) {
+    html += sHdr('🔍 Flow 1 — Lead Qualify · 24/7');
+    html += fcard(1,'📱','New Enquiry Arrives',ftag('client','📱 Customer')+ftag('bot','🤖 AI'),`Customer messages ${biz} about ${p}`,`AI detects new lead. Operating hours: <b>${d.hours||'?'}</b>. Responds regardless.`,`<b>Reply in &lt;60 sec</b><br><i>"Hi! Thanks for reaching out to ${biz}…"</i>`);
+    html += fcard(2,'🤖','AI Qualification — 3 Questions',ftag('bot','🤖 AI')+ftag('client','📱 Customer'),'Customer messages + follow-up replies','Q1: What exactly do you need?<br>Q2: When do you need it?<br>Q3: Are you the decision maker?',fbrs(fbr('yes','🔴 Hot','Specific need + urgent + DM'),fbr('warn','🟡 Warm','Has need, unclear timing'),fbr('no','⚪ Cold','Browsing, no urgency')));
+    html += fcard(3,'🎯','Hot Lead → Handoff',ftag('bot','🤖 AI')+ftag('benjamin',`💼 ${name}`),`Hot lead confirmed`,handoffDetail,`${name} gets WhatsApp alert:<br><b>"🔴 Hot lead: [Name]. Call now."</b>`);
+    html += fcard(4,'📎','Warm Lead → Nurture',ftag('bot','🤖 AI'),'Warm lead identified','AI sends case study. Schedules D3 + D7 follow-up.',fbrs(fbr('yes','Replies','Re-qualify → back to Step 2'),fbr('neu','No reply','D3 follow-up auto-queues')));
+  }
+
+  if (d.flows.includes('follow-up')) {
+    html += sHdr('📤 Flow 2 — Follow-Up Sequence');
+    html += fcard(1,'😶','Lead Silent After 48h',ftag('system','🗄️ CRM')+ftag('bot','🤖 AI'),'Lead went quiet after initial reply','CRM timer detects 48h silence. Queues D3 message.','Lead stays in pipeline. No manual action needed.');
+    html += fcard(2,'📤','Day 3 — Social Proof',ftag('bot','🤖 AI'),'48h no reply',`AI sends: "We helped a ${biz} client [result]…"`,fbrs(fbr('yes','Replies','Re-qualify'),fbr('no','No reply','Queue D7')));
+    html += fcard(3,'📤','Day 7 — Cost of Waiting',ftag('bot','🤖 AI'),'Still no reply','AI sends cost-of-doing-nothing message',fbrs(fbr('yes','Replies','Re-qualify'),fbr('no','No reply','Tag Dormant')));
+    html += fcard(4,'📦','Dormant + Day 30',ftag('system','🗄️ CRM')+ftag('bot','🤖 AI'),'No reply after 3 touches','CRM tags Dormant. D30 re-engage scheduled.',fbrs(fbr('yes','D30 reply','Back to qualify'),fbr('no','No reply','Archive → Meta Ads')));
+  }
+
+  if (d.flows.includes('appointment')) {
+    html += sHdr('📅 Flow 3 — Appointment Booking');
+    html += fcard(1,'📅','Customer Requests Booking',ftag('client','📱 Customer')+ftag('bot','🤖 AI'),'Customer says "can I book", "when free", "want to come in"','AI detects booking intent. Asks preferred date/time.',`AI: "Sure! We have slots on [days]. What works?"`)
+    html += fcard(2,'✅','Confirm + 24h Reminder',ftag('bot','🤖 AI')+ftag('system','🗄️ CRM'),'Customer replies with preferred slot','AI confirms. Logs to CRM. Queues 24h reminder.',fbrs(fbr('yes','Confirms','✅ Appointment set'),fbr('warn','Reschedule',`AI re-offers slots`),fbr('neu','No reply',`${name} notified to call`)));
+  }
+
+  if (d.flows.includes('order-intake')) {
+    html += sHdr('📦 Flow 4 — Order Intake');
+    html += fcard(1,'📋','Customer Sends Order',ftag('client','📱 Customer')+ftag('bot','🤖 AI'),'WhatsApp message with order items',`AI parses items + qty. Matches catalogue: <b>${prods.slice(0,3).join(', ')||'products'}</b>.`,'AI sends back clean order summary for confirmation.');
+    html += fcard(2,'✅','Confirm + Log',ftag('bot','🤖 AI')+ftag('system','📊 Sheet')+ftag('benjamin',`💼 ${name}`),'Customer confirms order','Logs to Google Sheet with timestamp. Alerts Benjamin.',`Row in Sheet: name · WA · items · qty · timestamp<br><b>"📦 New order from [Name]"</b>`);
+  }
+
+  if (d.flows.includes('renewal')) {
+    html += sHdr('🔄 Flow 5 — Renewal Reminder');
+    html += fcard(1,'🗓️','System Detects Renewal',ftag('system','🗄️ CRM')+ftag('bot','🤖 AI'),'Client renewal date in CRM','AI checks daily. Triggers at D30 / D14 / D7.',`D30 message: "Hi [Name] — your plan renews in 30 days…"`);
+    html += fcard(2,'📤','D14 + D7 + Handoff',ftag('bot','🤖 AI')+ftag('benjamin',`💼 ${name}`),'No confirmation after D30',`D14: upgrade offer. D7: urgency.`,fbrs(fbr('yes','Confirms','CRM updated'),fbr('warn','Wants to discuss',`${name} notified`),fbr('no','No response',`${name} manual call flagged`)));
+  }
+
+  // Responsibility
+  const flowLabels = {'lead-qualify':'Qualify leads 24/7','follow-up':'Chase non-replies D3/D7/D30','appointment':'Book + confirm + remind','order-intake':'Take and log orders','renewal':'Renewal reminder sequence'};
+  const aiItems = d.flows.map(f=>`<div class="resp-item"><span class="resp-dot">·</span>${flowLabels[f]||f}</div>`).join('');
+
+  html += sHdr('👥 Who Does What') + `<div class="resp-grid">
+    <div class="resp-card"><div class="resp-head bot">🤖 AI Agent</div><div class="resp-sec"><div class="resp-freq">24/7 Auto</div>${aiItems}<div class="resp-item"><span class="resp-dot">·</span>Reply in &lt;60s</div><div class="resp-item"><span class="resp-dot">·</span>Score + route every lead</div></div></div>
+    <div class="resp-card"><div class="resp-head client">📱 Customer</div><div class="resp-sec"><div class="resp-freq">Their journey</div><div class="resp-item"><span class="resp-dot">·</span>Messages ${biz} on WhatsApp</div><div class="resp-item"><span class="resp-dot">·</span>Answers AI questions</div><div class="resp-item"><span class="resp-dot">·</span>Gets instant reply + follow-up</div></div></div>
+    <div class="resp-card"><div class="resp-head benjamin">💼 ${name}</div><div class="resp-sec"><div class="resp-freq">High-value only</div><div class="resp-item"><span class="resp-dot">·</span>Close hot leads</div><div class="resp-item"><span class="resp-dot">·</span>Review CRM daily (5 min)</div><div class="resp-item"><span class="resp-dot">·</span>Handle escalations only</div></div></div>
+  </div>`;
+
+  // Timeline
+  html += sHdr('📆 Delivery — Live in 7 Days') + `<div class="tl">
+    <div class="trow"><div class="tday"><div class="tday-l">Day 1</div><div class="tday-s">Kickoff</div></div><div class="tline"><div class="tline-dot"></div><div class="tline-bar"></div></div><div class="tcontent"><div class="tc-title">Intake + System Design</div><div class="tc-body">Review blueprint. Finalise flows, messages, product list. WA access granted.</div></div></div>
+    <div class="trow"><div class="tday"><div class="tday-l">Day 3</div><div class="tday-s">Draft</div></div><div class="tline"><div class="tline-dot"></div><div class="tline-bar"></div></div><div class="tcontent"><div class="tc-title">AI Draft Ready</div><div class="tc-body">First version of all ${d.flows.length} flow${d.flows.length>1?'s':''} built. ${name} tests as a real customer. Feedback round 1.</div></div></div>
+    <div class="trow"><div class="tday"><div class="tday-l">Day 7</div><div class="tday-s">Go Live</div></div><div class="tline"><div class="tline-dot"></div><div class="tline-bar"></div></div><div class="tcontent"><div class="tc-title">🚀 ${biz} AI Goes Live</div><div class="tc-body">All flows active. First real leads qualified automatically within hours.</div></div></div>
+    <div class="trow"><div class="tday"><div class="tday-l">Day 30</div><div class="tday-s">Review</div></div><div class="tline"><div class="tline-dot"></div><div class="tline-bar"></div></div><div class="tcontent"><div class="tc-title">Performance Review</div><div class="tc-body">Metrics reviewed. Messages tuned. Next flows planned.</div></div></div>
+  </div>`;
+
+  html += `<footer>${biz} · Builder Blueprint · Internal use only · Benjamin AI Agency · ${dateStr}</footer>`;
+  return html;
+}
+
+// ── LOAD FROM URL HASH ─────────────────────────────────
+window.addEventListener('load', () => {
+  const hash = location.hash.slice(1);
+  if (!hash) return;
+  try {
+    Object.assign(d, JSON.parse(decodeURIComponent(atob(hash))));
+    if (!d.flows.length) d.flows=['lead-qualify','follow-up'];
+    generatedUrl = location.href;
+    renderOutputs();
+    document.getElementById('form-wrap').style.display = 'none';
+    document.getElementById('out-wrap').style.display = 'block';
+  } catch(e) {}
+});
+</script>
+</body>
+</html>
