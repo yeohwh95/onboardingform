@@ -160,7 +160,7 @@ app.get('/api/demo/:client_id/config', async (req, res) => {
 
 app.post('/api/demo/:client_id/chat', async (req, res) => {
   try {
-    const { history } = req.body || {};
+    const { history, sessionId } = req.body || {};
     if (!Array.isArray(history) || history.length === 0) {
       return res.status(400).json({ ok: false, error: 'history required' });
     }
@@ -170,23 +170,79 @@ app.post('/api/demo/:client_id/chat', async (req, res) => {
     const cfg = await getDemoConfig(req.params.client_id);
     if (!cfg || !cfg.systemPrompt) return res.status(404).json({ ok: false, error: 'demo not ready' });
 
+    const JSON_FORMAT_RULE = `\n\n=== OUTPUT FORMAT (MANDATORY) ===\nYou MUST always reply with valid JSON of this exact shape:\n{"thinking": ["short bullet 1", "short bullet 2", "short bullet 3"], "bubbles": ["bubble 1", "bubble 2"]}\n\n- thinking: 3-5 short bullets showing your reasoning (≤12 words each).\n- bubbles: 1-4 short WhatsApp-style messages. Split your reply naturally — never one huge paragraph. Use 1-2 emojis max per bubble.\nReturn JSON only, no other text.`;
+
     const oai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
     const completion = await oai.chat.completions.create({
       model: MODEL_CHAT,
       messages: [
-        { role: 'system', content: cfg.systemPrompt },
+        { role: 'system', content: cfg.systemPrompt + JSON_FORMAT_RULE },
         ...history.slice(-DEMO_MAX_TURNS * 2)
       ],
-      max_tokens: 250,
+      response_format: { type: 'json_object' },
+      max_tokens: 600,
       temperature: 0.7
     });
-    const reply = completion.choices[0].message.content.trim();
-    res.json({ ok: true, reply });
+    const raw = completion.choices[0].message.content;
+
+    let thinking, bubbles;
+    try {
+      const parsed = JSON.parse(raw);
+      thinking = Array.isArray(parsed.thinking) ? parsed.thinking : [];
+      bubbles  = Array.isArray(parsed.bubbles) && parsed.bubbles.length ? parsed.bubbles : [String(parsed.reply || raw)];
+    } catch {
+      // graceful fallback: split on \n\n into bubbles, no thinking
+      thinking = [];
+      bubbles = String(raw).split(/\n\s*\n/).filter(Boolean);
+    }
+
+    // Background log (don't block response)
+    const lastUser = [...history].reverse().find(h => h.role === 'user');
+    if (lastUser && sessionId) {
+      logDemoChat({
+        clientId: req.params.client_id,
+        sessionId,
+        userMsg: lastUser.content,
+        bubbles,
+        thinking,
+        userAgent: req.get('user-agent') || ''
+      }).catch(e => console.error('[chat log]', e.message));
+    }
+
+    res.json({ ok: true, thinking, bubbles });
   } catch (e) {
     console.error('[demo chat]', e.message);
     res.status(500).json({ ok: false, error: e.message });
   }
 });
+
+// ─── Conversation logging to "DemoChats" tab ─────────────────
+async function logDemoChat({ clientId, sessionId, userMsg, bubbles, thinking, userAgent }) {
+  const { google } = require('googleapis');
+  const SHEET_ID = process.env.GOOGLE_SHEET_ID || '1v0fJ_RJQA33sdYvYP6sJzg10zzT-usXoaNltYwzQSjQ';
+
+  function loadCreds() {
+    const inline = process.env.GOOGLE_SHEETS_CREDS_JSON;
+    if (inline) return JSON.parse(inline);
+    return require(process.env.GOOGLE_CREDS_PATH || `${process.env.HOME}/google-sheets-creds.json`);
+  }
+  const c = loadCreds();
+  const auth = new google.auth.JWT(c.client_email, null, c.private_key, ['https://www.googleapis.com/auth/spreadsheets']);
+  const sheets = google.sheets({ version: 'v4', auth });
+
+  const now = new Date().toLocaleString('en-CA', { timeZone: 'Asia/Kuala_Lumpur', hour12: false }).replace(',', '');
+  const rows = [
+    [now, clientId, sessionId, 'user', userMsg, '', '', userAgent.slice(0, 200)],
+    [now, clientId, sessionId, 'ai', bubbles.join(' ⏎ '), (thinking || []).join(' | '), String(bubbles.length), '']
+  ];
+  await sheets.spreadsheets.values.append({
+    spreadsheetId: SHEET_ID,
+    range: 'DemoChats!A:H',
+    valueInputOption: 'RAW',
+    insertDataOption: 'INSERT_ROWS',
+    requestBody: { values: rows }
+  });
+}
 
 // Manual rebuild trigger (for the upcoming Apps Script "Build Now" button + cron)
 app.post('/api/build/:client_id', async (req, res) => {
