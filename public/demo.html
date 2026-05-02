@@ -110,6 +110,47 @@ footer { font-size: 11px; color: #94a3b8; margin-top: 20px; text-align: center; 
 .loader-hint b { color: #475569; }
 
 @media (max-width: 480px) { .loader-card { padding: 28px 20px; } .loader-icon { width: 64px; height: 64px; font-size: 28px; } }
+
+/* ──────────── MODE SWITCHER MODAL ──────────── */
+.modal-veil { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(6px); z-index: 9000; display: flex; align-items: center; justify-content: center; padding: 20px; opacity: 0; visibility: hidden; transition: opacity 0.3s, visibility 0.3s; }
+.modal-veil.show { opacity: 1; visibility: visible; }
+.modal-card { background: white; border-radius: 24px; padding: 36px 32px; max-width: 560px; width: 100%; max-height: 92vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(15, 23, 42, 0.3); transform: translateY(20px); transition: transform 0.3s; }
+.modal-veil.show .modal-card { transform: translateY(0); }
+.modal-title { font-size: 22px; font-weight: 800; color: #0f172a; margin-bottom: 6px; text-align: center; }
+.modal-sub { font-size: 13px; color: #64748b; margin-bottom: 24px; text-align: center; line-height: 1.5; }
+
+.mode-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+@media (max-width: 480px) { .mode-grid { grid-template-columns: 1fr; } }
+.mode-btn { background: white; border: 2px solid #e2e8f0; border-radius: 14px; padding: 16px 14px; text-align: left; cursor: pointer; transition: all 0.15s; font-family: inherit; }
+.mode-btn:hover { border-color: #2563eb; background: #f8fafc; transform: translateY(-2px); box-shadow: 0 6px 18px rgba(37, 99, 235, 0.15); }
+.mode-btn.cases:hover { border-color: #7c3aed; box-shadow: 0 6px 18px rgba(124, 58, 237, 0.15); }
+.mode-btn.active { border-color: #16a34a; background: #f0fdf4; }
+.mode-icon { font-size: 28px; margin-bottom: 8px; display: block; }
+.mode-name { font-size: 14px; font-weight: 800; color: #0f172a; margin-bottom: 4px; }
+.mode-desc { font-size: 11px; color: #64748b; line-height: 1.4; }
+
+.modal-close { background: transparent; border: none; color: #94a3b8; font-size: 13px; cursor: pointer; padding: 8px; margin-top: 8px; width: 100%; text-align: center; font-family: inherit; }
+.modal-close:hover { color: #475569; }
+
+/* ──────────── MODE INDICATOR (top of phone) ──────────── */
+.mode-pill { position: absolute; top: 8px; right: 12px; background: rgba(255, 255, 255, 0.2); color: white; font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 8px; letter-spacing: 0.3px; backdrop-filter: blur(4px); }
+.hdr { position: relative; }
+
+/* ──────────── FLOATING "TRY OTHER AI" BUTTON ──────────── */
+.try-other-btn { position: fixed; bottom: 20px; right: 20px; background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%); color: white; border: none; border-radius: 50px; padding: 12px 22px; font-size: 13px; font-weight: 800; cursor: pointer; box-shadow: 0 8px 24px rgba(37, 99, 235, 0.4); z-index: 100; transition: transform 0.2s; font-family: inherit; display: none; }
+.try-other-btn.show { display: block; }
+.try-other-btn:hover { transform: translateY(-2px) scale(1.03); }
+
+/* ──────────── CASE STUDY MODAL ──────────── */
+.case-grid { display: flex; flex-direction: column; gap: 12px; margin-bottom: 16px; }
+.case-card { background: linear-gradient(135deg, #f8fafc 0%, #eef2ff 100%); border: 1.5px solid #e2e8f0; border-radius: 14px; padding: 18px; }
+.case-head { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.case-icon { font-size: 24px; }
+.case-vert { font-size: 14px; font-weight: 800; color: #0f172a; }
+.case-loc { font-size: 11px; color: #64748b; }
+.case-stat { font-size: 24px; font-weight: 900; color: #2563eb; line-height: 1; margin: 8px 0 4px; }
+.case-stat-label { font-size: 11px; color: #475569; font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; }
+.case-desc { font-size: 12px; color: #1e293b; line-height: 1.5; margin-top: 8px; }
 </style>
 </head>
 <body>
@@ -150,6 +191,7 @@ footer { font-size: 11px; color: #94a3b8; margin-top: 20px; text-align: center; 
           <div class="hdr-status">online · powered by AI</div>
         </div>
         <div class="hdr-icons">📞</div>
+        <div class="mode-pill" id="mode-pill" style="display:none">YOUR DEMO</div>
       </div>
       <div class="chat" id="chat">
         <div class="typing" id="typing"><span class="typing-dot">●</span> <span class="typing-dot">●</span> <span class="typing-dot">●</span></div>
@@ -180,6 +222,62 @@ footer { font-size: 11px; color: #94a3b8; margin-top: 20px; text-align: center; 
   <footer>Demo limited to 20 messages · Powered by AI Agency</footer>
 </div>
 
+<!-- ──────────── MODE SWITCHER MODAL ──────────── -->
+<div class="modal-veil" id="mode-modal">
+  <div class="modal-card">
+    <div class="modal-title">🎉 You've seen one AI in action</div>
+    <div class="modal-sub">Want to try a different one? AI can do way more than chat.</div>
+    <div class="mode-grid" id="mode-grid">
+      <!-- populated by JS -->
+    </div>
+    <button class="modal-close" onclick="closeModeModal()">Maybe later — back to chat</button>
+  </div>
+</div>
+
+<!-- ──────────── INDUSTRY CASE STUDIES MODAL ──────────── -->
+<div class="modal-veil" id="cases-modal">
+  <div class="modal-card">
+    <div class="modal-title">📊 Real Industry Cases</div>
+    <div class="modal-sub">What we've built for businesses just like yours (anonymized).</div>
+    <div class="case-grid">
+      <div class="case-card">
+        <div class="case-head"><div class="case-icon">🚗</div><div><div class="case-vert">Motor Dealer</div><div class="case-loc">Klang Valley</div></div></div>
+        <div class="case-stat">50+</div>
+        <div class="case-stat-label">leads/day captured</div>
+        <div class="case-desc">Lead qualification AI handles WhatsApp 24/7. Captured 50+ leads/day previously lost to slow human response. 3× conversion vs manual.</div>
+      </div>
+      <div class="case-card">
+        <div class="case-head"><div class="case-icon">🥬</div><div><div class="case-vert">F&B Wholesaler</div><div class="case-loc">300+ outlets, KL/Selangor</div></div></div>
+        <div class="case-stat">100+</div>
+        <div class="case-stat-label">orders/day auto-parsed</div>
+        <div class="case-desc">AI parses natural-language WhatsApp orders into Google Sheets. Eliminated manual order entry. Handles English + BM + Chinese mixed.</div>
+      </div>
+      <div class="case-card">
+        <div class="case-head"><div class="case-icon">💒</div><div><div class="case-vert">Wedding Venue</div><div class="case-loc">KL</div></div></div>
+        <div class="case-stat">4×</div>
+        <div class="case-stat-label">weekend bookings</div>
+        <div class="case-desc">24/7 booking AI captures showroom visit requests round the clock. Weekend enquiries up 4× — no more bookings lost when staff offline.</div>
+      </div>
+      <div class="case-card">
+        <div class="case-head"><div class="case-icon">🍜</div><div><div class="case-vert">Restaurant Chain</div><div class="case-loc">PJ + Subang</div></div></div>
+        <div class="case-stat">2 hrs/day</div>
+        <div class="case-stat-label">staff time saved per outlet</div>
+        <div class="case-desc">AI handles delivery + reservation + menu queries 24/7. Saves 2 staff hours/day per outlet. Multi-language support.</div>
+      </div>
+      <div class="case-card">
+        <div class="case-head"><div class="case-icon">🏥</div><div><div class="case-vert">Clinic</div><div class="case-loc">Subang Jaya</div></div></div>
+        <div class="case-stat">0</div>
+        <div class="case-stat-label">double-bookings since launch</div>
+        <div class="case-desc">Appointment AI books patients into 5 doctors' calendars across 3 specialties. Zero double-bookings, after-hours appointments now possible.</div>
+      </div>
+    </div>
+    <button class="modal-close" onclick="closeCasesModal()">Close — back to chat</button>
+  </div>
+</div>
+
+<!-- Floating "Try other AI" button -->
+<button class="try-other-btn" id="try-other-btn" onclick="openModeModal()">🎯 Try other AI</button>
+
 <script>
 // ─── State ─────────────────────────────────────────────
 const CLIENT_ID = window.location.pathname.split('/').pop();
@@ -189,12 +287,15 @@ const MERGE_DELAY_MS = 4000;     // wait this long after last user msg before se
 const TYPING_PER_CHAR_MS = 28;   // realism: ~28 ms per char while AI "types"
 const BUBBLE_GAP_MS = 350;        // pause between consecutive bubbles
 const TYPING_MIN_MS = 600;        // floor for very short bubbles
+const MODE_TRIGGER_THRESHOLD = 5; // user message count to auto-open mode modal
 
 let history = [];          // turns sent to /chat (alternating user/assistant)
 let pendingUserMsgs = [];  // messages waiting for merge timer
 let mergeTimer = null;
-let sentCount = 0;
+let sentCount = 0;          // user messages sent (lifetime)
 let busy = false;
+let currentModeId = null;   // null = original per-client demo; else mode_id
+let modeModalShown = false; // only auto-open once
 
 const chatEl = document.getElementById('chat');
 const inputEl = document.getElementById('msg');
@@ -389,7 +490,7 @@ async function processMergedMessages() {
     const r = await fetch(`/api/demo/${CLIENT_ID}/chat`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ history, sessionId: SESSION_ID })
+      body: JSON.stringify({ history, sessionId: SESSION_ID, modeId: currentModeId })
     });
     response = await r.json();
   } catch (e) {
@@ -433,6 +534,7 @@ async function processMergedMessages() {
   history.push({ role: 'assistant', content: fullReply });
   brainDivider('waiting for user');
   finishTurn();
+  maybeAutoOpenModal();
 }
 
 function finishTurn() {
@@ -456,9 +558,117 @@ async function playPreThinking() {
   }
 }
 
+// ─── MODE SWITCHING ────────────────────────────────────
+const modeModal = document.getElementById('mode-modal');
+const casesModal = document.getElementById('cases-modal');
+const modeGrid = document.getElementById('mode-grid');
+const modePill = document.getElementById('mode-pill');
+const tryOtherBtn = document.getElementById('try-other-btn');
+
+let availableModes = [];
+
+async function preloadModes() {
+  try {
+    const r = await fetch('/api/demo/modes');
+    const j = await r.json();
+    if (j.ok) availableModes = j.modes;
+  } catch (e) {
+    console.error('mode preload', e);
+  }
+}
+
+function buildModeGrid() {
+  modeGrid.innerHTML = '';
+  for (const m of availableModes) {
+    const btn = document.createElement('button');
+    btn.className = 'mode-btn' + (currentModeId === m.modeId ? ' active' : '');
+    btn.innerHTML = `<span class="mode-icon">${m.icon}</span><div class="mode-name">${escapeHtml(m.businessName)}</div><div class="mode-desc">${escapeHtml(m.description)}</div>`;
+    btn.onclick = () => switchToMode(m.modeId);
+    modeGrid.appendChild(btn);
+  }
+  // Industry case studies button
+  const cases = document.createElement('button');
+  cases.className = 'mode-btn cases';
+  cases.innerHTML = `<span class="mode-icon">📊</span><div class="mode-name">Industry Cases</div><div class="mode-desc">Real anonymized results across 5 verticals</div>`;
+  cases.onclick = () => { closeModeModal(); openCasesModal(); };
+  modeGrid.appendChild(cases);
+}
+
+function openModeModal() {
+  if (availableModes.length === 0) return;
+  buildModeGrid();
+  modeModal.classList.add('show');
+}
+function closeModeModal() { modeModal.classList.remove('show'); }
+function openCasesModal() { casesModal.classList.add('show'); }
+function closeCasesModal() { casesModal.classList.remove('show'); }
+
+async function switchToMode(modeId) {
+  closeModeModal();
+  brainDivider('switching mode');
+  brainLine(`🔄 Loading ${modeId} demo...`, 'event');
+
+  try {
+    const r = await fetch(`/api/demo/mode/${modeId}/config`);
+    const cfg = await r.json();
+    if (!cfg.ok) throw new Error(cfg.error || 'mode load failed');
+
+    currentModeId = modeId;
+    history = [];
+    pendingUserMsgs = [];
+    if (mergeTimer) clearTimeout(mergeTimer);
+    sentCount = 0;
+    busy = false;
+
+    // Visually reset the chat (keep typing element)
+    const bubbles = chatEl.querySelectorAll('.bubble');
+    bubbles.forEach(b => b.remove());
+
+    document.getElementById('biz-name').textContent = `${cfg.businessName} AI`;
+    document.getElementById('hdr-name').textContent = cfg.businessName;
+    document.getElementById('avatar').textContent = (cfg.personaName || cfg.businessName || '?').slice(0, 2).toUpperCase();
+    modePill.style.display = 'block';
+    modePill.textContent = (modeId.replace('_', ' ')).toUpperCase();
+
+    brainLine('✓ Loaded ' + cfg.businessName, 'success');
+    brainLine('✓ Persona: ' + (cfg.personaName || 'AI Assistant'), 'success');
+    brainLine('🚀 New demo ready', 'event');
+
+    setTyping(true);
+    await sleep(800);
+    setTyping(false);
+    renderBubble('bot', cfg.openingMsg);
+    history.push({ role: 'assistant', content: cfg.openingMsg });
+    brainDivider('waiting for user');
+
+    sendBtn.disabled = false;
+    inputEl.disabled = false;
+    inputEl.focus();
+  } catch (e) {
+    brainLine('❌ Mode switch failed: ' + e.message, 'warn');
+  }
+}
+
+// Maybe auto-open the mode modal after enough turns
+function maybeAutoOpenModal() {
+  if (modeModalShown || currentModeId !== null) return; // only once, only on initial demo
+  if (sentCount >= MODE_TRIGGER_THRESHOLD) {
+    modeModalShown = true;
+    setTimeout(() => {
+      brainLine(`🎉 ${MODE_TRIGGER_THRESHOLD}+ messages reached — showing more AI demos`, 'event');
+      openModeModal();
+    }, 1500); // small delay so AI's last reply finishes rendering
+  }
+}
+
 sendBtn.addEventListener('click', onUserSend);
 inputEl.addEventListener('keydown', (e) => { if (e.key === 'Enter') onUserSend(); });
 
+// Preload modes in background, then init
+preloadModes().then(() => {
+  // Show the floating "Try other AI" button only after modes loaded
+  if (availableModes.length > 0) tryOtherBtn.classList.add('show');
+});
 loadConfig();
 </script>
 </body>

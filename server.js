@@ -4,6 +4,7 @@ const path = require('path');
 const OpenAI = require('openai');
 const { appendRow } = require('./sheets');
 const { build, getDemoConfig } = require('./builder');
+const { listModes, getMode } = require('./modes');
 
 const app = express();
 app.use(express.json());
@@ -149,6 +150,7 @@ app.get('/api/demo/:client_id/config', async (req, res) => {
       ok: true,
       businessName: cfg.businessName,
       industry: cfg.industry,
+      personaName: '',
       openingMsg: cfg.openingMsg,
       benjaminWa: cfg.benjaminWa
     });
@@ -158,17 +160,57 @@ app.get('/api/demo/:client_id/config', async (req, res) => {
   }
 });
 
+// List all available "Try other AI" modes (Sales / Service / Operations)
+app.get('/api/demo/modes', async (req, res) => {
+  try {
+    const modes = await listModes();
+    res.json({ ok: true, modes });
+  } catch (e) {
+    console.error('[modes list]', e.message);
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
+// Get config for a specific mode (used when user clicks a mode in the modal)
+app.get('/api/demo/mode/:mode_id/config', async (req, res) => {
+  try {
+    const m = await getMode(req.params.mode_id);
+    if (!m) return res.status(404).json({ ok: false, error: 'mode not found' });
+    res.json({
+      ok: true,
+      businessName: m.businessName,
+      industry: m.industry,
+      personaName: m.personaName,
+      openingMsg: m.openingMsg,
+      benjaminWa: process.env.BENJAMIN_DEMO_WA || '60162393812',
+      isMode: true,
+      modeId: m.modeId
+    });
+  } catch (e) {
+    console.error('[mode config]', e.message);
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
 app.post('/api/demo/:client_id/chat', async (req, res) => {
   try {
-    const { history, sessionId } = req.body || {};
+    const { history, sessionId, modeId } = req.body || {};
     if (!Array.isArray(history) || history.length === 0) {
       return res.status(400).json({ ok: false, error: 'history required' });
     }
     if (history.length > DEMO_MAX_TURNS * 2) {
       return res.status(429).json({ ok: false, error: `demo limited to ${DEMO_MAX_TURNS} turns` });
     }
-    const cfg = await getDemoConfig(req.params.client_id);
-    if (!cfg || !cfg.systemPrompt) return res.status(404).json({ ok: false, error: 'demo not ready' });
+    // Two paths: per-client demo or generic mode demo (sales/service/ops).
+    let cfg;
+    if (modeId) {
+      const m = await getMode(modeId);
+      if (!m) return res.status(404).json({ ok: false, error: 'mode not found' });
+      cfg = { systemPrompt: m.systemPrompt };
+    } else {
+      cfg = await getDemoConfig(req.params.client_id);
+      if (!cfg || !cfg.systemPrompt) return res.status(404).json({ ok: false, error: 'demo not ready' });
+    }
 
     const JSON_FORMAT_RULE = `
 
@@ -226,15 +268,16 @@ This rule overrides everything. Never break it.`;
       bubbles = String(raw).split(/\n\s*\n/).filter(Boolean);
     }
 
-    // Safety net: scan bubbles for unauthorized money figures.
-    // Allow numbers that appear in the system prompt verbatim (real product prices).
-    const moneyRe = /(?:RM\s?\d|MYR\s?\d|\$\s?\d|USD\s?\d|\d+\s?(?:k|K|ribu|千|万)\b|\d{1,3}(?:[,\s]?\d{3})+|RM\s?\d+\.\d+)/g;
+    // Safety net: scan bubbles for explicit money mentions only.
+    // Only block strings with clear currency context (RM/MYR/$/USD/ringgit/cost/price).
+    // Plain numbers (tracking #, order #, phone, count) are allowed.
+    const moneyRe = /(?:\bRM\s?\d|\bMYR\s?\d|\$\s?\d|\bUSD\s?\d|\d+\s*(?:k|K)\s*(?:ringgit|RM)?\b|\d+\s*ribu\b|\d+\s*ringgit|ringgit\s*\d+|\bharga\s*\w*\s*\d+|\bprice[:\s]+\d+|\bcost[:\s]+\d+)/gi;
     const allowedNumbers = new Set(
-      (cfg.systemPrompt.match(/\d[\d,\.]*/g) || []).filter(n => n.length >= 3)
+      (cfg.systemPrompt.match(/\b(?:RM|MYR|\$)\s?\d[\d,\.]*/gi) || [])
     );
     bubbles = bubbles.map(b => {
       const matches = b.match(moneyRe) || [];
-      const unauthorized = matches.filter(m => !Array.from(allowedNumbers).some(a => m.includes(a)));
+      const unauthorized = matches.filter(m => !Array.from(allowedNumbers).some(a => m.toLowerCase().includes(a.toLowerCase())));
       if (unauthorized.length === 0) return b;
       console.warn('[demo chat] blocked price hallucination:', unauthorized);
       thinking.push(`⚠️ Blocked unauthorized price: ${unauthorized.join(', ')}`);
