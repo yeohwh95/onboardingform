@@ -80,10 +80,12 @@ function validate(d) {
 
   if (!has(d.bizName))   errors.push('business name is required');
   if (!has(d.bizType))   errors.push('business type is required');
-  if (!hasArr(d.pain))   errors.push('select at least one pain point');
-  if (!has(d.volume))    errors.push('volume is required');
+  if (!has(d.website) && !has(d.bizDescription)) errors.push('website OR business description required');
+  if (!hasArr(d.toolsUsed)) errors.push('pick at least one tool you use today');
+  if (!has(d.manualPain)) errors.push('tell us your most painful manual task');
+  if (!hasArr(d.flows))  errors.push('select at least one workflow to automate');
+  if (!has(d.volume))    errors.push('task volume is required');
   if (!has(d.urgency))   errors.push('urgency is required');
-  if (!hasArr(d.flows))  errors.push('select at least one AI flow');
   if (!has(d.hours))     errors.push('operating hours required');
   if (!has(d.handoff))   errors.push('handoff method required');
   if (!has(d.deal))      errors.push('deal value required');

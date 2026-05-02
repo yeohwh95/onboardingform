@@ -286,8 +286,8 @@ footer { text-align: center; margin-top: 56px; font-size: 11px; color: #94a3b8; 
     <div class="form-step" id="step-1">
       <div class="step-label">Step 1 of 7</div>
       <div class="step-title">Tell us about your business</div>
-      <div class="step-desc">We'll use this to personalise every message and node in your blueprint.</div>
-      <div class="step-hint">💡 Your business name appears on the AI's opening message, alert notifications, and your shareable flowchart link.</div>
+      <div class="step-desc">We'll use this to personalise every node in your blueprint + auto-pull context from your website.</div>
+      <div class="step-hint">💡 <b>Got a website? Drop it.</b> We pull products, tone, FAQ from it automatically. No website? Just describe what you do — both work.</div>
       <div class="field"><label>Business Name</label><input type="text" id="f-bizname" placeholder="e.g. TM Motoworld, U Fresh, L'Artelier"></div>
       <div class="field"><label>Business Type</label>
         <div class="option-grid cols-2">
@@ -301,35 +301,67 @@ footer { text-align: center; margin-top: 56px; font-size: 11px; color: #94a3b8; 
           <label class="opt-item opt-radio" data-group="biztype" data-val="Other"><input type="radio"><span class="opt-icon">📦</span><span class="opt-text"><span class="opt-title">Other</span><span class="opt-sub">Different industry</span></span><span class="opt-check"></span></label>
         </div>
       </div>
+      <div class="field"><label>🌐 Website <span style="color:#94a3b8;font-weight:400">(optional — drop URL or describe below)</span></label><input type="text" id="f-website" placeholder="e.g. https://yourbiz.com or yourbiz.com"></div>
+      <div class="field"><label>OR briefly describe what you do <span style="color:#94a3b8;font-weight:400">(skip if you added website)</span></label><textarea id="f-bizdesc" placeholder="e.g. We're a fresh produce wholesaler delivering to 300+ restaurants in KL. Order via WhatsApp groups." style="min-height: 70px"></textarea></div>
     </div>
 
     <!-- Step 2 -->
     <div class="form-step" id="step-2" style="display:none">
       <div class="step-label">Step 2 of 7</div>
-      <div class="step-title">What's costing you the most?</div>
-      <div class="step-desc">Pick up to 3 — these become your priority flows.</div>
-      <div class="step-hint">💡 <b>Your top pain = your first ROI.</b> We build the flows that directly eliminate your biggest daily bottleneck first. Most clients see payback within 30 days of the first flow.</div>
+      <div class="step-title">Your current workflow</div>
+      <div class="step-desc">What tools you use + the manual task that's eating your day.</div>
+      <div class="step-hint">💡 <b>We integrate with tools that have open APIs.</b> Pick whatever you actually use today — we'll connect them to your AI agent.</div>
+      <div class="field">
+        <label>Which tools are you using? <span style="color:#94a3b8;font-weight:400">(pick all that apply)</span></label>
+        <div class="option-grid cols-2">
+          <label class="opt-item" data-group="tools" data-val="google-sheets"><input type="checkbox"><span class="opt-icon">📊</span><span class="opt-text"><span class="opt-title">Google Sheets / Excel</span><span class="opt-sub">Sheets API · MS Graph</span></span><span class="opt-check"></span></label>
+          <label class="opt-item" data-group="tools" data-val="whatsapp"><input type="checkbox"><span class="opt-icon">💬</span><span class="opt-text"><span class="opt-title">WhatsApp Business</span><span class="opt-sub">ChatDaddy · WhatsApp Cloud API</span></span><span class="opt-check"></span></label>
+          <label class="opt-item" data-group="tools" data-val="calendar"><input type="checkbox"><span class="opt-icon">📅</span><span class="opt-text"><span class="opt-title">Calendar</span><span class="opt-sub">Google Calendar · Cal.com · Calendly</span></span><span class="opt-check"></span></label>
+          <label class="opt-item" data-group="tools" data-val="crm"><input type="checkbox"><span class="opt-icon">🗂️</span><span class="opt-text"><span class="opt-title">CRM</span><span class="opt-sub">HubSpot · Salesforce · Pipedrive · Notion · Airtable</span></span><span class="opt-check"></span></label>
+          <label class="opt-item" data-group="tools" data-val="email"><input type="checkbox"><span class="opt-icon">📧</span><span class="opt-text"><span class="opt-title">Email</span><span class="opt-sub">Gmail · Outlook (MS Graph)</span></span><span class="opt-check"></span></label>
+          <label class="opt-item" data-group="tools" data-val="payment"><input type="checkbox"><span class="opt-icon">💳</span><span class="opt-text"><span class="opt-title">Payment</span><span class="opt-sub">Stripe · Senangpay · Billplz · iPay88</span></span><span class="opt-check"></span></label>
+          <label class="opt-item" data-group="tools" data-val="ecommerce"><input type="checkbox"><span class="opt-icon">🛒</span><span class="opt-text"><span class="opt-title">E-commerce</span><span class="opt-sub">Shopify · WooCommerce</span></span><span class="opt-check"></span></label>
+          <label class="opt-item" data-group="tools" data-val="accounting"><input type="checkbox"><span class="opt-icon">📚</span><span class="opt-text"><span class="opt-title">Accounting</span><span class="opt-sub">QuickBooks · Xero · Wave</span></span><span class="opt-check"></span></label>
+          <label class="opt-item" data-group="tools" data-val="pos"><input type="checkbox"><span class="opt-icon">🏪</span><span class="opt-text"><span class="opt-title">POS</span><span class="opt-sub">Square · Loyverse</span></span><span class="opt-check"></span></label>
+          <label class="opt-item" data-group="tools" data-val="forms"><input type="checkbox"><span class="opt-icon">🎯</span><span class="opt-text"><span class="opt-title">Forms / Intake</span><span class="opt-sub">Typeform · Paperform · Jotform</span></span><span class="opt-check"></span></label>
+          <label class="opt-item" data-group="tools" data-val="team-chat"><input type="checkbox"><span class="opt-icon">📲</span><span class="opt-text"><span class="opt-title">Team chat</span><span class="opt-sub">Slack · Discord · Lark · Telegram</span></span><span class="opt-check"></span></label>
+          <label class="opt-item" data-group="tools" data-val="orchestrator"><input type="checkbox"><span class="opt-icon">🤖</span><span class="opt-text"><span class="opt-title">Automation orchestrator</span><span class="opt-sub">Make · Zapier · n8n</span></span><span class="opt-check"></span></label>
+          <label class="opt-item" data-group="tools" data-val="email-marketing"><input type="checkbox"><span class="opt-icon">📢</span><span class="opt-text"><span class="opt-title">Email marketing</span><span class="opt-sub">Mailchimp · SendGrid · ConvertKit</span></span><span class="opt-check"></span></label>
+          <label class="opt-item" data-group="tools" data-val="other"><input type="checkbox"><span class="opt-icon">✏️</span><span class="opt-text"><span class="opt-title">Other</span><span class="opt-sub">Describe below</span></span><span class="opt-check"></span></label>
+        </div>
+      </div>
+      <div class="field"><label>What's the most painful manual task today?</label><textarea id="f-manualpain" placeholder="e.g. Every WhatsApp group order, I copy-paste to Sheet 50 times a day. Clients also keep asking same FAQs." style="min-height: 80px"></textarea></div>
+    </div>
+
+    <!-- Step 3 — was Step 4, now Automation flows -->
+    <div class="form-step" id="step-3" style="display:none">
+      <div class="step-label">Step 3 of 7</div>
+      <div class="step-title">What do you want automated?</div>
+      <div class="step-desc">Each one becomes a flow in your blueprint. Pick all that apply.</div>
+      <div class="step-hint">💡 <b>Most clients start with 2–3 flows.</b> Each flow becomes its own Input → Process → Output card with the exact integrations + message templates pre-mapped.</div>
       <div class="option-grid">
-        <label class="opt-item" data-group="pain" data-val="Too many enquiries"><input type="checkbox"><span class="opt-icon">📱</span><span class="opt-text"><span class="opt-title">Too many WhatsApp enquiries</span><span class="opt-sub">Can't reply fast enough, leads going cold</span></span><span class="opt-check"></span></label>
-        <label class="opt-item" data-group="pain" data-val="No follow-up system"><input type="checkbox"><span class="opt-icon">😶</span><span class="opt-text"><span class="opt-title">Leads come in but no follow-up</span><span class="opt-sub">Enquiries drop off and you forget to chase</span></span><span class="opt-check"></span></label>
-        <label class="opt-item" data-group="pain" data-val="Manual order taking"><input type="checkbox"><span class="opt-icon">📋</span><span class="opt-text"><span class="opt-title">Taking orders manually via WhatsApp</span><span class="opt-sub">Wrong items, missed orders, staff time wasted</span></span><span class="opt-check"></span></label>
-        <label class="opt-item" data-group="pain" data-val="Appointment chaos"><input type="checkbox"><span class="opt-icon">📅</span><span class="opt-text"><span class="opt-title">Appointment booking is chaotic</span><span class="opt-sub">No-shows, double bookings, manual reminders</span></span><span class="opt-check"></span></label>
-        <label class="opt-item" data-group="pain" data-val="Silent churn"><input type="checkbox"><span class="opt-icon">🔄</span><span class="opt-text"><span class="opt-title">Renewals forgotten, clients churn silently</span><span class="opt-sub">No reminder system, lose repeat business</span></span><span class="opt-check"></span></label>
-        <label class="opt-item" data-group="pain" data-val="Staff on repetitive messages"><input type="checkbox"><span class="opt-icon">👷</span><span class="opt-text"><span class="opt-title">Staff spending hours on same questions</span><span class="opt-sub">Pricing, hours, availability — answered 50x/day</span></span><span class="opt-check"></span></label>
+        <label class="opt-item" data-group="flows" data-val="lead-qualify"><input type="checkbox"><span class="opt-icon">🔍</span><span class="opt-text"><span class="opt-title">Qualify leads → route to right rep</span><span class="opt-sub">AI scores intent (hot/warm/cold), assigns to sales staff, updates CRM</span></span><span class="opt-check"></span></label>
+        <label class="opt-item" data-group="flows" data-val="follow-up"><input type="checkbox"><span class="opt-icon">📤</span><span class="opt-text"><span class="opt-title">Auto-follow-up cold leads</span><span class="opt-sub">AI chases non-replies — Day 3 / 7 / 30 from your Sheet/CRM</span></span><span class="opt-check"></span></label>
+        <label class="opt-item" data-group="flows" data-val="appointment"><input type="checkbox"><span class="opt-icon">📅</span><span class="opt-text"><span class="opt-title">Book appointments + reminders</span><span class="opt-sub">Qualify → check calendar → send link → set reminders → sync</span></span><span class="opt-check"></span></label>
+        <label class="opt-item" data-group="flows" data-val="order-intake"><input type="checkbox"><span class="opt-icon">📦</span><span class="opt-text"><span class="opt-title">Process WhatsApp orders → log to Sheet</span><span class="opt-sub">Parse natural-language orders, confirm, auto-place, update Sheet</span></span><span class="opt-check"></span></label>
+        <label class="opt-item" data-group="flows" data-val="outreach"><input type="checkbox"><span class="opt-icon">📊</span><span class="opt-text"><span class="opt-title">Pull contacts from Sheet → send outreach</span><span class="opt-sub">Filter inactive leads, send personalized WA, schedule follow-ups</span></span><span class="opt-check"></span></label>
+        <label class="opt-item" data-group="flows" data-val="renewal"><input type="checkbox"><span class="opt-icon">🔄</span><span class="opt-text"><span class="opt-title">Renewal + churn prevention</span><span class="opt-sub">Reminds clients at D30 / D14 / D7 before contract ends</span></span><span class="opt-check"></span></label>
+        <label class="opt-item" data-group="flows" data-val="faq-support"><input type="checkbox"><span class="opt-icon">💬</span><span class="opt-text"><span class="opt-title">Answer FAQs 24/7 → escalate complex</span><span class="opt-sub">Handles repetitive Qs, escalates real issues to team</span></span><span class="opt-check"></span></label>
+        <label class="opt-item" data-group="flows" data-val="data-sync"><input type="checkbox"><span class="opt-icon">🔁</span><span class="opt-text"><span class="opt-title">Sync data between tools</span><span class="opt-sub">e.g. Stripe → Sheet → CRM auto-sync</span></span><span class="opt-check"></span></label>
       </div>
     </div>
 
-    <!-- Step 3 -->
-    <div class="form-step" id="step-3" style="display:none">
-      <div class="step-label">Step 3 of 7</div>
-      <div class="step-title">How busy is your WhatsApp?</div>
-      <div class="step-desc">Helps us size the system right.</div>
-      <div class="step-hint">💡 Volume determines how the AI is architected — higher volume means parallel conversation handling and smarter routing rules. This also shapes the ROI number in your blueprint.</div>
-      <div class="field"><label>Daily messages received</label>
+    <!-- Step 4 — was Step 3, now Volume of TASK + timeline -->
+    <div class="form-step" id="step-4" style="display:none">
+      <div class="step-label">Step 4 of 7</div>
+      <div class="step-title">Volume of tasks to automate</div>
+      <div class="step-desc">Not customer enquiries — actual repetitive tasks per day.</div>
+      <div class="step-hint">💡 <b>Volume = how many actions AI runs per day.</b> Each parsed order, each lead qualified, each appointment booked = 1 task. This sizes the system + your ROI.</div>
+      <div class="field"><label>Tasks per day (estimate)</label>
         <div class="option-grid">
-          <label class="opt-item opt-radio" data-group="volume" data-val="Under 50"><input type="radio"><span class="opt-icon">🟢</span><span class="opt-text"><span class="opt-title">Under 50 messages/day</span><span class="opt-sub">Manageable but still time-consuming</span></span><span class="opt-check"></span></label>
-          <label class="opt-item opt-radio" data-group="volume" data-val="50–200"><input type="radio"><span class="opt-icon">🟡</span><span class="opt-text"><span class="opt-title">50–200 messages/day</span><span class="opt-sub">Need a system — too many to handle manually</span></span><span class="opt-check"></span></label>
-          <label class="opt-item opt-radio" data-group="volume" data-val="200+"><input type="radio"><span class="opt-icon">🔴</span><span class="opt-text"><span class="opt-title">200+ messages/day</span><span class="opt-sub">Overwhelmed — AI is essential</span></span><span class="opt-check"></span></label>
+          <label class="opt-item opt-radio" data-group="volume" data-val="Under 50"><input type="radio"><span class="opt-icon">🟢</span><span class="opt-text"><span class="opt-title">Under 50 tasks/day</span><span class="opt-sub">Small but adds up — 1+ hour/day saved</span></span><span class="opt-check"></span></label>
+          <label class="opt-item opt-radio" data-group="volume" data-val="50–200"><input type="radio"><span class="opt-icon">🟡</span><span class="opt-text"><span class="opt-title">50–200 tasks/day</span><span class="opt-sub">Big ROI — 3–5 hours/day saved</span></span><span class="opt-check"></span></label>
+          <label class="opt-item opt-radio" data-group="volume" data-val="200+"><input type="radio"><span class="opt-icon">🔴</span><span class="opt-text"><span class="opt-title">200+ tasks/day</span><span class="opt-sub">Massive ROI — full-time-equivalent saved</span></span><span class="opt-check"></span></label>
         </div>
       </div>
       <div class="field"><label>How soon do you need this live?</label>
@@ -338,21 +370,6 @@ footer { text-align: center; margin-top: 56px; font-size: 11px; color: #94a3b8; 
           <label class="opt-item opt-radio" data-group="urgency" data-val="Next 3 months"><input type="radio"><span class="opt-text"><span class="opt-title">📆 Next 3 months</span></span><span class="opt-check"></span></label>
           <label class="opt-item opt-radio" data-group="urgency" data-val="Just exploring"><input type="radio"><span class="opt-text"><span class="opt-title">🔍 Just exploring</span></span><span class="opt-check"></span></label>
         </div>
-      </div>
-    </div>
-
-    <!-- Step 4 -->
-    <div class="form-step" id="step-4" style="display:none">
-      <div class="step-label">Step 4 of 7</div>
-      <div class="step-title">Which AI flows do you need?</div>
-      <div class="step-desc">Each one becomes a section in your blueprint. Select all that apply.</div>
-      <div class="step-hint">💡 <b>Most clients start with 2–3 flows.</b> Each flow you select becomes its own Input → Process → Output card in your blueprint, with exact message templates and logic pre-mapped.</div>
-      <div class="option-grid">
-        <label class="opt-item" data-group="flows" data-val="lead-qualify"><input type="checkbox"><span class="opt-icon">🔍</span><span class="opt-text"><span class="opt-title">Lead Qualify</span><span class="opt-sub">AI qualifies new leads 24/7 — scores intent, routes hot/warm/cold</span></span><span class="opt-check"></span></label>
-        <label class="opt-item" data-group="flows" data-val="follow-up"><input type="checkbox"><span class="opt-icon">📤</span><span class="opt-text"><span class="opt-title">Follow-Up Sequence</span><span class="opt-sub">AI chases non-replies automatically — Day 3 / 7 / 30</span></span><span class="opt-check"></span></label>
-        <label class="opt-item" data-group="flows" data-val="appointment"><input type="checkbox"><span class="opt-icon">📅</span><span class="opt-text"><span class="opt-title">Appointment Booking</span><span class="opt-sub">AI books, confirms, and sends 24h reminders</span></span><span class="opt-check"></span></label>
-        <label class="opt-item" data-group="flows" data-val="order-intake"><input type="checkbox"><span class="opt-icon">📦</span><span class="opt-text"><span class="opt-title">Order Intake</span><span class="opt-sub">AI takes orders via WhatsApp, confirms, logs to Google Sheet</span></span><span class="opt-check"></span></label>
-        <label class="opt-item" data-group="flows" data-val="renewal"><input type="checkbox"><span class="opt-icon">🔄</span><span class="opt-text"><span class="opt-title">Renewal Reminder</span><span class="opt-sub">AI reminds clients at D30 / D14 / D7 before contract ends</span></span><span class="opt-check"></span></label>
       </div>
     </div>
 
@@ -445,7 +462,7 @@ footer { text-align: center; margin-top: 56px; font-size: 11px; color: #94a3b8; 
 <script>
 let cur = 1;
 const TOTAL = 7;
-const d = { bizName:'', bizType:'', pain:[], volume:'', urgency:'', flows:[], hours:'', handoff:'', products:'', deal:'', name:'', phone:'', bizPhone:'' };
+const d = { bizName:'', bizType:'', website:'', bizDescription:'', toolsUsed:[], manualPain:'', flows:[], volume:'', urgency:'', hours:'', handoff:'', products:'', deal:'', name:'', phone:'', bizPhone:'' };
 let generatedUrl = '';
 
 // ── FORM INTERACTIONS ──────────────────────────────────
@@ -465,10 +482,24 @@ document.querySelectorAll('.opt-item').forEach(el => {
 });
 
 function collect(n) {
-  if (n===1) { d.bizName=document.getElementById('f-bizname').value.trim(); const s=document.querySelector('.opt-item.selected[data-group="biztype"]'); d.bizType=s?s.dataset.val:''; }
-  if (n===2) { d.pain=[...document.querySelectorAll('.opt-item.selected[data-group="pain"]')].map(x=>x.dataset.val); }
-  if (n===3) { const v=document.querySelector('.opt-item.selected[data-group="volume"]'); d.volume=v?v.dataset.val:''; const u=document.querySelector('.opt-item.selected[data-group="urgency"]'); d.urgency=u?u.dataset.val:''; }
-  if (n===4) { d.flows=[...document.querySelectorAll('.opt-item.selected[data-group="flows"]')].map(x=>x.dataset.val); }
+  if (n===1) {
+    d.bizName=document.getElementById('f-bizname').value.trim();
+    const s=document.querySelector('.opt-item.selected[data-group="biztype"]');
+    d.bizType=s?s.dataset.val:'';
+    d.website=document.getElementById('f-website').value.trim();
+    d.bizDescription=document.getElementById('f-bizdesc').value.trim();
+  }
+  if (n===2) {
+    d.toolsUsed=[...document.querySelectorAll('.opt-item.selected[data-group="tools"]')].map(x=>x.dataset.val);
+    d.manualPain=document.getElementById('f-manualpain').value.trim();
+  }
+  if (n===3) { d.flows=[...document.querySelectorAll('.opt-item.selected[data-group="flows"]')].map(x=>x.dataset.val); }
+  if (n===4) {
+    const v=document.querySelector('.opt-item.selected[data-group="volume"]');
+    d.volume=v?v.dataset.val:'';
+    const u=document.querySelector('.opt-item.selected[data-group="urgency"]');
+    d.urgency=u?u.dataset.val:'';
+  }
   if (n===5) { const h=document.querySelector('.opt-item.selected[data-group="hours"]'); d.hours=h?h.dataset.val:''; const hf=document.querySelector('.opt-item.selected[data-group="handoff"]'); d.handoff=hf?hf.dataset.val:''; }
   if (n===6) { d.products=document.getElementById('f-products').value.trim(); const dv=document.querySelector('.opt-item.selected[data-group="deal"]'); d.deal=dv?dv.dataset.val:''; }
   if (n===7) { d.name=document.getElementById('f-name').value.trim(); d.phone=document.getElementById('f-phone').value.trim(); d.bizPhone=document.getElementById('f-bizphone').value.trim(); }
@@ -476,10 +507,17 @@ function collect(n) {
 
 function validateStep(n) {
   const errs = [];
-  if (n===1) { if (!d.bizName) errs.push('Please enter your business name'); if (!d.bizType) errs.push('Please pick a business type'); }
-  if (n===2) { if (!d.pain.length) errs.push('Please select at least one pain point'); }
-  if (n===3) { if (!d.volume) errs.push('Please pick a daily message volume'); if (!d.urgency) errs.push('Please pick a timeline'); }
-  if (n===4) { if (!d.flows.length) errs.push('Please select at least one AI flow'); }
+  if (n===1) {
+    if (!d.bizName) errs.push('Please enter your business name');
+    if (!d.bizType) errs.push('Please pick a business type');
+    if (!d.website && !d.bizDescription) errs.push('Either drop your website OR briefly describe what you do');
+  }
+  if (n===2) {
+    if (!d.toolsUsed.length) errs.push('Pick at least one tool you use today (or pick Other)');
+    if (!d.manualPain) errs.push('Tell us your most painful manual task — even one line is enough');
+  }
+  if (n===3) { if (!d.flows.length) errs.push('Pick at least one workflow to automate'); }
+  if (n===4) { if (!d.volume) errs.push('Please pick a task volume'); if (!d.urgency) errs.push('Please pick a timeline'); }
   if (n===5) { if (!d.hours) errs.push('Please pick operating hours'); if (!d.handoff) errs.push('Please pick a hot lead handoff method'); }
   if (n===6) { if (!d.products) errs.push('Please describe your key products/services'); if (!d.deal) errs.push('Please pick a deal value range'); }
   if (n===7) {

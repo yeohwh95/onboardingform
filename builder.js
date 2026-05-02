@@ -7,7 +7,7 @@ const { google } = require('googleapis');
 const { buildSpec } = require('./spec');
 
 const SHEET_ID = process.env.GOOGLE_SHEET_ID || '1v0fJ_RJQA33sdYvYP6sJzg10zzT-usXoaNltYwzQSjQ';
-const TAB = process.env.GOOGLE_SHEET_TAB || 'Sheet1';
+const TAB = process.env.GOOGLE_SHEET_TAB || 'Form CRM';
 const MODEL_BUILD = process.env.OPENAI_MODEL_BUILD || 'gpt-4o-mini';
 
 function loadCreds() {
@@ -81,12 +81,21 @@ async function generateDemoConfig(d, spec) {
     'visit-invite': `Invite them to visit. Share location and ask when they can come.`
   };
 
+  const ctx = [];
+  if (d.website)        ctx.push(`Website: ${d.website}`);
+  if (d.bizDescription) ctx.push(`Business description: ${d.bizDescription}`);
+  if (d.toolsUsed && d.toolsUsed.length) ctx.push(`Tools they already use: ${d.toolsUsed.join(', ')}`);
+  if (d.manualPain)     ctx.push(`Most painful manual task today: "${d.manualPain}"`);
+  const ctxBlock = ctx.length ? `\nClient context:\n- ${ctx.join('\n- ')}\n` : '';
+
   const prompt = `You are designing a WhatsApp AI Assistant for ${d.bizName}, a ${d.bizType || 'business'} based in Malaysia.
 
 The business owner submitted this spec:
 ---
 ${spec}
 ---
+${ctxBlock}
+**This AI is positioned as part of an Account Service Management agency offering — not a standalone bot.** It must integrate with the client's existing tools and feel like a smart team member, not a chatbot widget.
 
 Generate a SYSTEM_PROMPT (≤600 words) and OPENING_MESSAGE (≤25 words). Both must follow the rules below.
 
@@ -140,6 +149,8 @@ The system prompt MUST instruct the AI to:
    - Operating hours: ${d.hours || '24/7'}
    - Currency: RM (Ringgit). Never use $ or USD.
    - Local context: Malaysia (KL/Selangor area). Reference local norms (Touch'n Go, GrabPay, JB, Klang Valley).
+   - **Tools the client already uses (integrate naturally):** ${(d.toolsUsed || []).map(t => t.replace(/-/g, ' ')).join(', ') || 'none specified'}
+   - **Most painful manual task this AI must eliminate:** ${d.manualPain ? `"${d.manualPain.slice(0, 200)}"` : '(not specified)'}
 
 6. HARD RULE ON PRICING (CRITICAL — NEVER BREAK)
    - You are FORBIDDEN to mention any specific price, RM amount, percentage discount, deposit figure, or any monetary number.

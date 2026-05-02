@@ -6,7 +6,27 @@ const FLOW_NAMES = {
   'follow-up':    'Follow-Up Sequence',
   'appointment':  'Appointment Booking',
   'order-intake': 'Order Intake',
-  'renewal':      'Renewal Reminder'
+  'outreach':     'Sheet → Outreach',
+  'renewal':      'Renewal Reminder',
+  'faq-support':  'FAQ + Smart Escalation',
+  'data-sync':    'Data Sync Between Tools'
+};
+
+const TOOL_LABELS = {
+  'google-sheets':   'Google Sheets / Excel (Sheets API · MS Graph)',
+  'whatsapp':        'WhatsApp Business (ChatDaddy · WhatsApp Cloud API)',
+  'calendar':        'Calendar (Google Calendar · Cal.com · Calendly)',
+  'crm':             'CRM (HubSpot · Salesforce · Pipedrive · Notion · Airtable)',
+  'email':           'Email (Gmail · Outlook / MS Graph)',
+  'payment':         'Payment (Stripe · Senangpay · Billplz · iPay88)',
+  'ecommerce':       'E-commerce (Shopify · WooCommerce)',
+  'accounting':      'Accounting (QuickBooks · Xero · Wave)',
+  'pos':             'POS (Square · Loyverse)',
+  'forms':           'Forms (Typeform · Paperform · Jotform)',
+  'team-chat':       'Team chat (Slack · Discord · Lark · Telegram)',
+  'orchestrator':    'Automation orchestrator (Make · Zapier · n8n)',
+  'email-marketing': 'Email marketing (Mailchimp · SendGrid · ConvertKit)',
+  'other':           'Other (custom integration — see manual_pain)'
 };
 
 function handoffString(handoff, name) {
@@ -87,6 +107,36 @@ function flowBlock(f, idx, d, name) {
       `      no_confirm: "alert_${ownerKey}_for_manual_call"`
     );
   }
+  if (f === 'outreach') {
+    lines.push(
+      `      trigger: "scheduled_cron OR manual_run"`,
+      `      steps:`,
+      `        1: "read_contacts_from_sheet"`,
+      `        2: "filter_by_last_contact_>_14_days"`,
+      `        3: "generate_personalized_message_per_lead"`,
+      `        4: "send_via_whatsapp_api"`,
+      `        5: "schedule_followup_D3_D7"`,
+      `      requires: "Google Sheets + WhatsApp API"`
+    );
+  }
+  if (f === 'faq-support') {
+    lines.push(
+      `      trigger: "any_inbound_message"`,
+      `      flow:`,
+      `        1: "classify_intent (FAQ vs complex)"`,
+      `        2: "if_FAQ → answer_from_knowledge_base"`,
+      `        3: "if_complex → escalate_to_human + log_ticket"`,
+      `      knowledge_source: "website + uploaded docs"`
+    );
+  }
+  if (f === 'data-sync') {
+    lines.push(
+      `      trigger: "webhook_from_source_tool OR scheduled"`,
+      `      pattern: "[source] → [destination] field mapping"`,
+      `      example: "Stripe payment → Sheet row → CRM lead status"`,
+      `      requires: "webhook endpoints + retry logic + idempotency"`
+    );
+  }
   return lines.join('\n');
 }
 
@@ -113,7 +163,21 @@ function buildSpec(d) {
 
   const ownerPhone = (d.phone || 'OWNER_NUMBER').replace(/\D/g, '');
 
-  return `# CLAUDE CODE BUILD SPEC — ${biz} WhatsApp AI
+  // Integrations: always include WhatsApp + AI core. Add user-selected tools.
+  const toolsSelected = (d.toolsUsed || []).map(t => TOOL_LABELS[t] || t);
+  const baseIntegrations = ['WhatsApp Business (primary channel)'];
+  if (!toolsSelected.some(t => /sheet|excel/i.test(t))) baseIntegrations.push('Google Sheets (default data store)');
+  const allIntegrations = [...baseIntegrations, ...toolsSelected];
+  const integrationsList = allIntegrations.map(t => `  ▸ "${t}"`).join('\n');
+
+  // Business context block (website + description + manual pain)
+  const ctxLines = [];
+  if (d.website)        ctxLines.push(`  website:     "${d.website}"`);
+  if (d.bizDescription) ctxLines.push(`  description: "${d.bizDescription.replace(/"/g, '\\"').slice(0, 300)}"`);
+  if (d.manualPain)     ctxLines.push(`  manual_pain: "${d.manualPain.replace(/"/g, '\\"').slice(0, 400)}"`);
+  const contextBlock = ctxLines.length ? `BUSINESS_CONTEXT:\n${ctxLines.join('\n')}\n\n` : '';
+
+  return `# CLAUDE CODE BUILD SPEC — ${biz} WhatsApp AI Agent
 # Generated: ${dateStr} · Paste this into Claude Code to start the build
 
 SYSTEM:
@@ -121,10 +185,11 @@ SYSTEM:
   platform: "ChatDaddy API + WhatsApp"
   biz_type: "${d.bizType || 'Business'}"
   owner:    "${name}"
-  volume:   "${d.volume || '50-200'} messages/day"
+  volume:   "${d.volume || '50-200'} tasks/day"
+  urgency:  "${d.urgency || 'Next 3 months'}"
   deal_val: "${d.deal || '?'}"
 
-FLOWS:
+${contextBlock}FLOWS:
 ${flowLines}
 
 PRODUCT_CATALOGUE:
@@ -133,9 +198,8 @@ ${prodList}
 MESSAGE_TEMPLATES_TO_WRITE:
 ${tmplList}
 
-INTEGRATIONS:
-  ▸ "ChatDaddy API"  ← primary inbox + send API
-  ▸ "Google Sheets"  ← order log / CRM (if order-intake or renewal)
+INTEGRATIONS_REQUIRED:
+${integrationsList}
   ▸ "WhatsApp alerts → ${name}: +${ownerPhone}"
 
 HANDOFF_PROTOCOL:

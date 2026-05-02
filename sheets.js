@@ -2,7 +2,7 @@ const { google } = require('googleapis');
 const { buildSpec } = require('./spec');
 
 const SHEET_ID = process.env.GOOGLE_SHEET_ID || '1v0fJ_RJQA33sdYvYP6sJzg10zzT-usXoaNltYwzQSjQ';
-const TAB = process.env.GOOGLE_SHEET_TAB || 'Sheet1';
+const TAB = process.env.GOOGLE_SHEET_TAB || 'Form CRM';
 
 const FLOW_LABELS = {
   'lead-qualify': 'Lead Qualify',
@@ -52,25 +52,29 @@ function nowKL() {
 
 function buildRow(d, shareUrl) {
   return [
-    nowKL(),                                                     // timestamp
-    generateClientId(),                                          // client_id
-    d.bizName || '',                                             // business_name
-    d.bizType || '',                                             // industry
-    d.name || '',                                                // contact_name
-    d.phone || '',                                               // contact_wa
-    d.bizPhone || '',                                            // business_wa
-    (d.flows || []).map(f => FLOW_LABELS[f] || f).join(', '),    // flows_needed
-    (d.pain || []).join(', '),                                   // pain_points
-    d.volume || '',                                              // volume
-    d.urgency || '',                                             // urgency
-    d.hours || '',                                               // operating_hours
-    HANDOFF_LABELS[d.handoff] || d.handoff || '',                // handoff_method
-    d.deal || '',                                                // deal_value
-    d.products || '',                                            // products
-    shareUrl || '',                                              // share_url
-    'new',                                                       // status
-    '', '', '', '', '', '',                                      // builder_output, qa_result, group_id, mrr, renewal_date, health_score
-    buildSpec(d)                                                 // build_spec — what Builder consumes
+    nowKL(),                                                     // A  timestamp
+    generateClientId(),                                          // B  client_id
+    d.bizName || '',                                             // C  business_name
+    d.bizType || '',                                             // D  industry
+    d.name || '',                                                // E  contact_name
+    d.phone || '',                                               // F  contact_wa
+    d.bizPhone || '',                                            // G  business_wa
+    (d.flows || []).map(f => FLOW_LABELS[f] || f).join(', '),    // H  flows_needed
+    (d.pain || []).join(', '),                                   // I  pain_points (legacy — empty for new submissions)
+    d.volume || '',                                              // J  volume
+    d.urgency || '',                                             // K  urgency
+    d.hours || '',                                               // L  operating_hours
+    HANDOFF_LABELS[d.handoff] || d.handoff || '',                // M  handoff_method
+    d.deal || '',                                                // N  deal_value
+    d.products || '',                                            // O  products
+    shareUrl || '',                                              // P  share_url
+    'new',                                                       // Q  status
+    '', '', '', '', '', '',                                      // R-W builder_output_path, qa_result, group_id, mrr, renewal_date, health_score
+    buildSpec(d),                                                // X  build_spec
+    '', '', '', '',                                              // Y-AB demo_system_prompt, demo_opening_msg, demo_url, demo_status (Builder fills)
+    d.website || '',                                             // AC website
+    (d.toolsUsed || []).join(', '),                              // AD tools_used
+    d.manualPain || ''                                           // AE manual_pain
   ];
 }
 
@@ -79,7 +83,7 @@ async function appendRow(d, shareUrl) {
   const row = buildRow(d, shareUrl);
   await sheets.spreadsheets.values.append({
     spreadsheetId: SHEET_ID,
-    range: `${TAB}!A:X`,
+    range: `${TAB}!A:AE`,
     valueInputOption: 'RAW',
     insertDataOption: 'INSERT_ROWS',
     requestBody: { values: [row] }
