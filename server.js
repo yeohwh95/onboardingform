@@ -1,11 +1,18 @@
 require('dotenv').config();
 const express = require('express');
 const path = require('path');
+const OpenAI = require('openai');
 const { appendRow } = require('./sheets');
+const { build, getDemoConfig } = require('./builder');
 
 const app = express();
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
+
+const MODEL_CHAT = process.env.OPENAI_MODEL_CHAT || 'gpt-4o-mini';
+const DEMO_MAX_TURNS = parseInt(process.env.DEMO_MAX_TURNS || '20', 10);
+const DEMO_WA_SEND_ENABLED = process.env.DEMO_WA_SEND_ENABLED === 'true';
+const DEMO_SEND_FROM_ACCOUNT = process.env.DEMO_SEND_FROM_ACCOUNT || ''; // gated until Benjamin picks
 
 const CD_TOKEN   = process.env.CHATDADDY_TOKEN;
 const CD_ACCOUNT = process.env.CHATDADDY_ACCOUNT || 'acc_5f2dc399-5107-4497-aa_fa91';
@@ -106,7 +113,19 @@ app.post('/api/submit', async (req, res) => {
       console.error('[sheet error]', sheetErr.message);
     }
 
-    // WA notification disabled — sheet write only for now.
+    // Auto-fire Builder Agent (background, do not block submit response)
+    if (clientId) {
+      build(clientId, BASE_URL)
+        .then(r => {
+          console.log(`[builder] demo ready: ${r.demoUrl}`);
+          if (DEMO_WA_SEND_ENABLED) {
+            sendDemoUrl(d, r.demoUrl, clientId).catch(e => console.error('[wa demo] error', e.message));
+          }
+        })
+        .catch(e => console.error('[builder error]', e.message));
+    }
+
+    // WA notification to owner disabled — sheet write only for now.
     // Re-enable: await sendWhatsApp(buildMessage(d, shareUrl, clientId));
 
     res.json({ ok: true, shareUrl, clientId });
@@ -115,6 +134,93 @@ app.post('/api/submit', async (req, res) => {
     res.status(500).json({ ok: false, error: e.message });
   }
 });
+
+// ─── DEMO ROUTES ─────────────────────────────────────────────
+app.get('/demo/:client_id', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'demo.html'));
+});
+
+app.get('/api/demo/:client_id/config', async (req, res) => {
+  try {
+    const cfg = await getDemoConfig(req.params.client_id);
+    if (!cfg) return res.status(404).json({ ok: false, error: 'client not found' });
+    if (cfg.demoStatus !== 'ready') return res.status(409).json({ ok: false, error: `demo ${cfg.demoStatus || 'not ready'}` });
+    res.json({
+      ok: true,
+      businessName: cfg.businessName,
+      industry: cfg.industry,
+      openingMsg: cfg.openingMsg,
+      benjaminWa: cfg.benjaminWa
+    });
+  } catch (e) {
+    console.error('[demo config]', e.message);
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
+app.post('/api/demo/:client_id/chat', async (req, res) => {
+  try {
+    const { history } = req.body || {};
+    if (!Array.isArray(history) || history.length === 0) {
+      return res.status(400).json({ ok: false, error: 'history required' });
+    }
+    if (history.length > DEMO_MAX_TURNS * 2) {
+      return res.status(429).json({ ok: false, error: `demo limited to ${DEMO_MAX_TURNS} turns` });
+    }
+    const cfg = await getDemoConfig(req.params.client_id);
+    if (!cfg || !cfg.systemPrompt) return res.status(404).json({ ok: false, error: 'demo not ready' });
+
+    const oai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+    const completion = await oai.chat.completions.create({
+      model: MODEL_CHAT,
+      messages: [
+        { role: 'system', content: cfg.systemPrompt },
+        ...history.slice(-DEMO_MAX_TURNS * 2)
+      ],
+      max_tokens: 250,
+      temperature: 0.7
+    });
+    const reply = completion.choices[0].message.content.trim();
+    res.json({ ok: true, reply });
+  } catch (e) {
+    console.error('[demo chat]', e.message);
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
+// Manual rebuild trigger (for the upcoming Apps Script "Build Now" button + cron)
+app.post('/api/build/:client_id', async (req, res) => {
+  try {
+    const r = await build(req.params.client_id, BASE_URL);
+    res.json(r);
+  } catch (e) {
+    console.error('[manual build]', e.message);
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
+// WA send demo URL — gated. Built but inactive until Benjamin picks the sender account.
+async function sendDemoUrl(d, demoUrl, clientId) {
+  if (!DEMO_WA_SEND_ENABLED) {
+    console.log('[wa demo] skipped (DEMO_WA_SEND_ENABLED=false)');
+    return;
+  }
+  if (!CD_TOKEN || !DEMO_SEND_FROM_ACCOUNT) {
+    console.log('[wa demo] skipped — missing token/account');
+    return;
+  }
+  const phone = (d.phone || '').replace(/\D/g, '');
+  if (!phone) return;
+  const text = `Hi ${d.name || 'there'} 👋\n\nYour AI demo is ready:\n${demoUrl}\n\nClick the link to try it — type any question, see how your AI would reply 24/7.\n\n— Benjamin`;
+  const fetch = (...a) => import('node-fetch').then(m => m.default(...a));
+  const r = await fetch(`https://api-im.chatdaddy.tech/messages?accountId=${DEMO_SEND_FROM_ACCOUNT}`, {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${CD_TOKEN}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ chatId: `${phone}@s.whatsapp.net`, message: text })
+  });
+  if (!r.ok) console.error('[wa demo] err', r.status, await r.text());
+  else console.log(`[wa demo] sent to ${phone} — ${clientId}`);
+}
 
 app.get('*', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
 
