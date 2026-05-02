@@ -1,4 +1,5 @@
 const { google } = require('googleapis');
+const { buildSpec } = require('./spec');
 
 const SHEET_ID = process.env.GOOGLE_SHEET_ID || '1v0fJ_RJQA33sdYvYP6sJzg10zzT-usXoaNltYwzQSjQ';
 const TAB = process.env.GOOGLE_SHEET_TAB || 'Sheet1';
@@ -68,7 +69,8 @@ function buildRow(d, shareUrl) {
     d.products || '',                                            // products
     shareUrl || '',                                              // share_url
     'new',                                                       // status
-    '', '', '', '', '', ''                                       // builder_output, qa_result, group_id, mrr, renewal_date, health_score
+    '', '', '', '', '', '',                                      // builder_output, qa_result, group_id, mrr, renewal_date, health_score
+    buildSpec(d)                                                 // build_spec — what Builder consumes
   ];
 }
 
@@ -77,7 +79,7 @@ async function appendRow(d, shareUrl) {
   const row = buildRow(d, shareUrl);
   await sheets.spreadsheets.values.append({
     spreadsheetId: SHEET_ID,
-    range: `${TAB}!A:W`,
+    range: `${TAB}!A:X`,
     valueInputOption: 'RAW',
     insertDataOption: 'INSERT_ROWS',
     requestBody: { values: [row] }

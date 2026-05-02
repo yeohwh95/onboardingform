@@ -64,9 +64,37 @@ function buildMessage(d, shareUrl, clientId) {
 💬 *Call them:* wa.me/${phone}`;
 }
 
+function validate(d) {
+  const errors = [];
+  const has = v => typeof v === 'string' && v.trim().length > 0;
+  const hasArr = v => Array.isArray(v) && v.length > 0;
+
+  if (!has(d.bizName))   errors.push('business name is required');
+  if (!has(d.bizType))   errors.push('business type is required');
+  if (!hasArr(d.pain))   errors.push('select at least one pain point');
+  if (!has(d.volume))    errors.push('volume is required');
+  if (!has(d.urgency))   errors.push('urgency is required');
+  if (!hasArr(d.flows))  errors.push('select at least one AI flow');
+  if (!has(d.hours))     errors.push('operating hours required');
+  if (!has(d.handoff))   errors.push('handoff method required');
+  if (!has(d.deal))      errors.push('deal value required');
+  if (!has(d.name))      errors.push('your name is required');
+  if (!has(d.phone))     errors.push('your WhatsApp number is required');
+  else if (d.phone.replace(/\D/g, '').length < 10) errors.push('phone must have at least 10 digits');
+  if (!has(d.bizPhone))  errors.push('business WhatsApp number is required');
+
+  return errors;
+}
+
 app.post('/api/submit', async (req, res) => {
   try {
     const d = req.body;
+
+    const errors = validate(d);
+    if (errors.length) {
+      return res.status(400).json({ ok: false, errors });
+    }
+
     const hash = Buffer.from(encodeURIComponent(JSON.stringify(d))).toString('base64');
     const shareUrl = `${BASE_URL}/#${hash}`;
 

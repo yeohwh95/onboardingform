@@ -53,6 +53,9 @@ body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f1f5f9; min-
 .opt-radio .opt-check { border-radius: 50%; }
 .opt-radio.selected .opt-check::after { content: '•'; font-size: 14px; line-height: 1; }
 
+.step-errors { margin-top: 16px; display: flex; flex-direction: column; gap: 6px; }
+.step-err { font-size: 12px; font-weight: 600; color: #b91c1c; background: #fef2f2; border: 1.5px solid #fecaca; border-radius: 8px; padding: 8px 12px; }
+
 .form-nav { display: flex; justify-content: space-between; align-items: center; margin-top: 24px; padding-top: 20px; border-top: 1.5px solid #f1f5f9; }
 .btn-prev, .btn-next { padding: 10px 22px; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; border: none; transition: all 0.15s; }
 .btn-prev { background: #f1f5f9; color: #475569; }
@@ -462,13 +465,43 @@ document.querySelectorAll('.opt-item').forEach(el => {
 });
 
 function collect(n) {
-  if (n===1) { d.bizName=document.getElementById('f-bizname').value.trim()||'Your Business'; const s=document.querySelector('.opt-item.selected[data-group="biztype"]'); d.bizType=s?s.dataset.val:'Business'; }
+  if (n===1) { d.bizName=document.getElementById('f-bizname').value.trim(); const s=document.querySelector('.opt-item.selected[data-group="biztype"]'); d.bizType=s?s.dataset.val:''; }
   if (n===2) { d.pain=[...document.querySelectorAll('.opt-item.selected[data-group="pain"]')].map(x=>x.dataset.val); }
-  if (n===3) { const v=document.querySelector('.opt-item.selected[data-group="volume"]'); d.volume=v?v.dataset.val:'50–200'; const u=document.querySelector('.opt-item.selected[data-group="urgency"]'); d.urgency=u?u.dataset.val:''; }
+  if (n===3) { const v=document.querySelector('.opt-item.selected[data-group="volume"]'); d.volume=v?v.dataset.val:''; const u=document.querySelector('.opt-item.selected[data-group="urgency"]'); d.urgency=u?u.dataset.val:''; }
   if (n===4) { d.flows=[...document.querySelectorAll('.opt-item.selected[data-group="flows"]')].map(x=>x.dataset.val); }
-  if (n===5) { const h=document.querySelector('.opt-item.selected[data-group="hours"]'); d.hours=h?h.dataset.val:'9am–6pm weekdays'; const hf=document.querySelector('.opt-item.selected[data-group="handoff"]'); d.handoff=hf?hf.dataset.val:'owner-call'; }
+  if (n===5) { const h=document.querySelector('.opt-item.selected[data-group="hours"]'); d.hours=h?h.dataset.val:''; const hf=document.querySelector('.opt-item.selected[data-group="handoff"]'); d.handoff=hf?hf.dataset.val:''; }
   if (n===6) { d.products=document.getElementById('f-products').value.trim(); const dv=document.querySelector('.opt-item.selected[data-group="deal"]'); d.deal=dv?dv.dataset.val:''; }
   if (n===7) { d.name=document.getElementById('f-name').value.trim(); d.phone=document.getElementById('f-phone').value.trim(); d.bizPhone=document.getElementById('f-bizphone').value.trim(); }
+}
+
+function validateStep(n) {
+  const errs = [];
+  if (n===1) { if (!d.bizName) errs.push('Please enter your business name'); if (!d.bizType) errs.push('Please pick a business type'); }
+  if (n===2) { if (!d.pain.length) errs.push('Please select at least one pain point'); }
+  if (n===3) { if (!d.volume) errs.push('Please pick a daily message volume'); if (!d.urgency) errs.push('Please pick a timeline'); }
+  if (n===4) { if (!d.flows.length) errs.push('Please select at least one AI flow'); }
+  if (n===5) { if (!d.hours) errs.push('Please pick operating hours'); if (!d.handoff) errs.push('Please pick a hot lead handoff method'); }
+  if (n===6) { if (!d.products) errs.push('Please describe your key products/services'); if (!d.deal) errs.push('Please pick a deal value range'); }
+  if (n===7) {
+    if (!d.name) errs.push('Please enter your name');
+    if (!d.phone) errs.push('Please enter your WhatsApp number');
+    else if (d.phone.replace(/\D/g,'').length < 10) errs.push('WhatsApp number must have at least 10 digits');
+    if (!d.bizPhone) errs.push('Please enter your business WhatsApp number');
+  }
+  return errs;
+}
+
+function showStepErrors(n, errs) {
+  const stepEl = document.getElementById(`step-${n}`);
+  let box = stepEl.querySelector('.step-errors');
+  if (!box) {
+    box = document.createElement('div');
+    box.className = 'step-errors';
+    stepEl.appendChild(box);
+  }
+  if (!errs.length) { box.remove(); return; }
+  box.innerHTML = errs.map(e => `<div class="step-err">⚠️ ${e}</div>`).join('');
+  box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
 function showStep(n) {
@@ -491,7 +524,15 @@ function showStep(n) {
     nb.classList.remove('last-step');
   }
 }
-function nextStep() { if(cur<TOTAL){ collect(cur); cur++; showStep(cur); } }
+function nextStep() {
+  if (cur >= TOTAL) return;
+  collect(cur);
+  const errs = validateStep(cur);
+  if (errs.length) { showStepErrors(cur, errs); return; }
+  showStepErrors(cur, []);
+  cur++;
+  showStep(cur);
+}
 function prevStep() { if(cur>1){ cur--; showStep(cur); } }
 
 // ── CONFETTI ────────────────────────────────────────────
@@ -517,7 +558,19 @@ function triggerConfetti() {
 // ── GENERATE ───────────────────────────────────────────
 async function generate() {
   collect(7);
-  if (!d.flows.length) d.flows=['lead-qualify','follow-up'];
+
+  // Re-validate every step before submit (server also validates).
+  for (let s = 1; s <= TOTAL; s++) {
+    const errs = validateStep(s);
+    if (errs.length) {
+      // jump back to the offending step
+      cur = s;
+      showStep(s);
+      showStepErrors(s, errs);
+      return;
+    }
+  }
+  showStepErrors(7, []);
 
   const btn = document.getElementById('btn-next');
   btn.textContent = '⏳ Building your AI system…';
