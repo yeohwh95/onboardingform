@@ -83,9 +83,56 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC"
 .error { color: #b91c1c; background: #fef2f2; border: 1.5px solid #fecaca; padding: 12px; border-radius: 8px; font-size: 13px; max-width: 460px; margin: 16px auto; }
 
 footer { font-size: 11px; color: #94a3b8; margin-top: 20px; text-align: center; }
+
+/* ──────────── LOADING OVERLAY ──────────── */
+.loader-veil { position: fixed; inset: 0; background: linear-gradient(135deg, #f0f9ff 0%, #eef2ff 50%, #faf5ff 100%); z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 24px; transition: opacity 0.5s ease, visibility 0.5s; }
+.loader-veil.hide { opacity: 0; visibility: hidden; pointer-events: none; }
+.loader-card { background: white; border-radius: 24px; padding: 40px 36px; max-width: 440px; width: 100%; box-shadow: 0 20px 60px rgba(15, 23, 42, 0.12); text-align: center; }
+.loader-icon { width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%); margin: 0 auto 20px; display: flex; align-items: center; justify-content: center; font-size: 36px; color: white; box-shadow: 0 8px 24px rgba(37, 99, 235, 0.35); animation: float 2s ease-in-out infinite; }
+@keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+.loader-title { font-size: 20px; font-weight: 800; color: #0f172a; margin-bottom: 6px; }
+.loader-sub { font-size: 13px; color: #64748b; margin-bottom: 28px; line-height: 1.5; }
+
+.loader-steps { text-align: left; max-width: 320px; margin: 0 auto 20px; }
+.loader-step { display: flex; align-items: center; gap: 12px; padding: 10px 0; font-size: 13px; color: #94a3b8; transition: color 0.3s; }
+.loader-step .icon { width: 22px; height: 22px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 12px; background: #e2e8f0; color: #94a3b8; transition: all 0.3s; }
+.loader-step.active { color: #1e293b; font-weight: 600; }
+.loader-step.active .icon { background: #2563eb; color: white; animation: spin 1s linear infinite; }
+.loader-step.done { color: #15803d; }
+.loader-step.done .icon { background: #16a34a; color: white; animation: none; }
+.loader-step.done .icon::before { content: '✓'; }
+.loader-step.active .icon::before { content: ''; width: 10px; height: 10px; border: 2px solid white; border-top-color: transparent; border-radius: 50%; }
+@keyframes spin { 100% { transform: rotate(360deg); } }
+
+.loader-bar { width: 100%; max-width: 320px; height: 4px; background: #e2e8f0; border-radius: 99px; margin: 0 auto 12px; overflow: hidden; }
+.loader-bar-fill { height: 100%; background: linear-gradient(90deg, #2563eb 0%, #7c3aed 100%); border-radius: 99px; width: 0%; transition: width 0.5s ease; }
+.loader-hint { font-size: 11px; color: #94a3b8; }
+.loader-hint b { color: #475569; }
+
+@media (max-width: 480px) { .loader-card { padding: 28px 20px; } .loader-icon { width: 64px; height: 64px; font-size: 28px; } }
 </style>
 </head>
 <body>
+
+<!-- ──────────── LOADING OVERLAY (cold start friendly) ──────────── -->
+<div class="loader-veil" id="loader-veil">
+  <div class="loader-card">
+    <div class="loader-icon">🤖</div>
+    <div class="loader-title" id="loader-title">Preparing Your AI Demo</div>
+    <div class="loader-sub" id="loader-sub">Spinning up your personalized AI assistant…<br>This takes about 30 seconds on first visit.</div>
+
+    <div class="loader-steps" id="loader-steps">
+      <div class="loader-step active" data-step="1"><div class="icon"></div><div>Connecting to AI server</div></div>
+      <div class="loader-step" data-step="2"><div class="icon"></div><div>Loading your business profile</div></div>
+      <div class="loader-step" data-step="3"><div class="icon"></div><div>Initializing AI brain</div></div>
+      <div class="loader-step" data-step="4"><div class="icon"></div><div>Preparing first message</div></div>
+    </div>
+
+    <div class="loader-bar"><div class="loader-bar-fill" id="loader-bar-fill"></div></div>
+    <div class="loader-hint" id="loader-hint"><b>Tip:</b> Try asking in English, Bahasa, or 中文 — AI auto-switches!</div>
+  </div>
+</div>
+
 <div class="shell">
   <div class="intro">
     <span class="tag">🤖 LIVE AI DEMO</span>
@@ -203,11 +250,50 @@ function setTyping(on) {
   if (on) chatEl.scrollTop = chatEl.scrollHeight;
 }
 
+// ─── Loading overlay control ───────────────────────────
+const veilEl = document.getElementById('loader-veil');
+const stepEls = document.querySelectorAll('.loader-step');
+const barFill = document.getElementById('loader-bar-fill');
+const loaderSub = document.getElementById('loader-sub');
+
+function setLoaderStep(stepNum) {
+  stepEls.forEach(el => {
+    const s = parseInt(el.dataset.step, 10);
+    el.classList.remove('active', 'done');
+    if (s < stepNum) el.classList.add('done');
+    else if (s === stepNum) el.classList.add('active');
+  });
+  barFill.style.width = ((stepNum - 1) / stepEls.length * 100 + 5) + '%';
+}
+function setLoaderDone() {
+  stepEls.forEach(el => { el.classList.remove('active'); el.classList.add('done'); });
+  barFill.style.width = '100%';
+}
+function hideLoader() {
+  setTimeout(() => veilEl.classList.add('hide'), 300);
+}
+
+// Auto-advance step animation in case server is slow (stages reassure user)
+let loaderProgress = 1;
+function autoAdvanceLoader() {
+  if (loaderProgress < 3) {
+    loaderProgress++;
+    setLoaderStep(loaderProgress);
+  }
+}
+
 // ─── Init: load demo config ────────────────────────────
 async function loadConfig() {
-  brainLine('🌐 Connecting to demo backend...', 'event');
+  setLoaderStep(1);
+  brainLine('🚀 Waking up your AI...', 'event');
+
+  // After 4s and 9s, advance step animation if still loading (cold-start reassurance)
+  const t1 = setTimeout(() => { autoAdvanceLoader(); loaderSub.innerHTML = 'First visit takes a bit longer ⏳<br>Loading your business profile…'; }, 4000);
+  const t2 = setTimeout(() => { autoAdvanceLoader(); loaderSub.innerHTML = 'Almost there ✨<br>Initializing AI brain…'; }, 9000);
+
   try {
     const res = await fetch(`/api/demo/${CLIENT_ID}/config`);
+    clearTimeout(t1); clearTimeout(t2);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const cfg = await res.json();
     if (!cfg.ok) throw new Error(cfg.error || 'config not ready');
@@ -218,10 +304,17 @@ async function loadConfig() {
     document.getElementById('avatar').textContent = (cfg.businessName || '?').slice(0, 2).toUpperCase();
     document.getElementById('cta-btn').href = `https://wa.me/${cfg.benjaminWa}?text=${encodeURIComponent(`Hi Benjamin, I just tried the ${cfg.businessName} AI demo and want to learn more.`)}`;
 
+    setLoaderStep(4);
+    loaderSub.innerHTML = `Ready! Welcome to ${escapeHtml(cfg.businessName)} 👋`;
+
     brainLine('✓ Loaded business context: ' + cfg.businessName, 'success');
     brainLine('✓ Industry: ' + (cfg.industry || 'general'), 'success');
     brainLine('✓ System prompt loaded', 'success');
     brainLine('🚀 Ready. Sending opening message...', 'event');
+
+    setLoaderDone();
+    await sleep(500);
+    hideLoader();
 
     setTyping(true);
     await sleep(1000);
@@ -235,7 +328,8 @@ async function loadConfig() {
     sendBtn.disabled = false;
     inputEl.focus();
   } catch (e) {
-    chatEl.innerHTML = `<div class="error">Demo not ready yet: ${escapeHtml(e.message)}</div>`;
+    clearTimeout(t1); clearTimeout(t2);
+    loaderSub.innerHTML = `Hmm, taking longer than expected.<br><b>Error: ${escapeHtml(e.message)}</b><br><br>Please refresh in a moment.`;
     brainLine('❌ Init failed: ' + e.message, 'warn');
   }
 }

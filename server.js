@@ -170,7 +170,38 @@ app.post('/api/demo/:client_id/chat', async (req, res) => {
     const cfg = await getDemoConfig(req.params.client_id);
     if (!cfg || !cfg.systemPrompt) return res.status(404).json({ ok: false, error: 'demo not ready' });
 
-    const JSON_FORMAT_RULE = `\n\n=== OUTPUT FORMAT (MANDATORY) ===\nYou MUST always reply with valid JSON of this exact shape:\n{"thinking": ["short bullet 1", "short bullet 2", "short bullet 3"], "bubbles": ["bubble 1", "bubble 2"]}\n\n- thinking: 3-5 short bullets showing your reasoning (≤12 words each).\n- bubbles: 1-4 short WhatsApp-style messages. Split your reply naturally — never one huge paragraph. Use 1-2 emojis max per bubble.\nReturn JSON only, no other text.`;
+    const JSON_FORMAT_RULE = `
+
+=== OUTPUT FORMAT (MANDATORY JSON) ===
+You MUST always reply with valid JSON of this exact shape:
+{"thinking": ["short bullet 1", "short bullet 2", "short bullet 3"], "bubbles": ["bubble 1", "bubble 2"]}
+
+- thinking: 3-5 short bullets showing reasoning (≤12 words each).
+- bubbles: 1-4 short WhatsApp-style messages. Split your reply naturally — never one huge paragraph. Use 1-2 emojis max per bubble.
+Return JSON only.
+
+=== HARD RULE — PRICING (NEVER VIOLATE) ===
+You are ABSOLUTELY FORBIDDEN to mention any specific price, cost, RM amount, dollar amount, percentage discount, payment number, salary, fee, or any monetary figure — UNLESS that exact number appears verbatim in the system prompt above.
+
+If the customer asks anything about price/cost/quotation/budget (e.g. "how much", "berapa", "多少钱", "price", "cost", "harga", "rate", "fees", "deposit", "discount", "promo", "cheap", "afford"):
+- DO NOT estimate, guess, approximate, give ranges, or use general market knowledge.
+- DO NOT say things like "around RM X" / "starts from RM X" / "between X and Y".
+- INSTEAD: warmly defer to the human team. Reply with one of these patterns (vary phrasing):
+  · "Great pick! Let me get our team to send you the exact quote — what's your name and best contact?"
+  · "Best to get you the latest pricing direct from our team. Can I take your name and number?"
+  · BM: "Untuk harga terkini, biar team kami quote you direct. Boleh saya dapatkan nama dan no telefon you?"
+  · 中文: "价格部分让我安排团队直接报给您最准。可以给我您的名字和联系方式吗？"
+
+Examples:
+USER: "How much for Proton X70?"
+WRONG: {"bubbles": ["Around RM 98,000"]}
+RIGHT: {"bubbles": ["Great pick on the X70! 🚗", "Best to get you the latest price direct from our team.", "Can I take your name and number?"]}
+
+USER: "Diskaun ada?"
+WRONG: {"bubbles": ["Boleh dapat 5%"]}
+RIGHT: {"bubbles": ["Boleh check dengan team kami!", "Boleh share nama you dulu?"]}
+
+This rule overrides everything. Never break it.`;
 
     const oai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
     const completion = await oai.chat.completions.create({
@@ -191,10 +222,24 @@ app.post('/api/demo/:client_id/chat', async (req, res) => {
       thinking = Array.isArray(parsed.thinking) ? parsed.thinking : [];
       bubbles  = Array.isArray(parsed.bubbles) && parsed.bubbles.length ? parsed.bubbles : [String(parsed.reply || raw)];
     } catch {
-      // graceful fallback: split on \n\n into bubbles, no thinking
       thinking = [];
       bubbles = String(raw).split(/\n\s*\n/).filter(Boolean);
     }
+
+    // Safety net: scan bubbles for unauthorized money figures.
+    // Allow numbers that appear in the system prompt verbatim (real product prices).
+    const moneyRe = /(?:RM\s?\d|MYR\s?\d|\$\s?\d|USD\s?\d|\d+\s?(?:k|K|ribu|千|万)\b|\d{1,3}(?:[,\s]?\d{3})+|RM\s?\d+\.\d+)/g;
+    const allowedNumbers = new Set(
+      (cfg.systemPrompt.match(/\d[\d,\.]*/g) || []).filter(n => n.length >= 3)
+    );
+    bubbles = bubbles.map(b => {
+      const matches = b.match(moneyRe) || [];
+      const unauthorized = matches.filter(m => !Array.from(allowedNumbers).some(a => m.includes(a)));
+      if (unauthorized.length === 0) return b;
+      console.warn('[demo chat] blocked price hallucination:', unauthorized);
+      thinking.push(`⚠️ Blocked unauthorized price: ${unauthorized.join(', ')}`);
+      return `Best to get you the exact pricing direct from our team — can I take your name and contact? 📞`;
+    });
 
     // Background log (don't block response)
     const lastUser = [...history].reverse().find(h => h.role === 'user');
