@@ -178,22 +178,35 @@ footer { font-size: 11px; color: #94a3b8; margin-top: 20px; text-align: center; 
 .scene-card-title { font-size: 13px; font-weight: 700; color: #0f172a; }
 .scene-card-sub { font-size: 11px; color: #64748b; padding-left: 28px; }
 
-/* Center: phone-like card */
-.scene-stage { background: white; border-radius: 18px; padding: 28px 28px 24px; min-height: 520px; position: relative; box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08); border: 1.5px solid; border-image: linear-gradient(135deg, #f97316, #d946ef) 1; display: flex; flex-direction: column; gap: 16px; }
+/* Center: phone-like card with flowing chat */
+.scene-stage { background: white; border-radius: 18px; padding: 24px 24px 20px; min-height: 540px; max-height: 640px; position: relative; box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08); border: 1.5px solid; border-image: linear-gradient(135deg, #f97316, #d946ef) 1; display: flex; flex-direction: column; gap: 12px; overflow-y: auto; scroll-behavior: smooth; }
 
-.scene-user-bubble { background: #581c87; color: white; padding: 14px 18px; border-radius: 18px; font-size: 14px; line-height: 1.5; align-self: flex-end; max-width: 85%; opacity: 0; transform: translateY(6px); transition: opacity 0.3s, transform 0.3s; white-space: pre-line; }
+/* Each "row" in the conversation */
+.scene-row-user { align-self: flex-end; max-width: 88%; }
+.scene-row-thinking { align-self: flex-start; max-width: 92%; padding: 4px 0; }
+.scene-row-bot { align-self: flex-start; max-width: 88%; display: flex; flex-direction: column; gap: 4px; }
+
+.scene-user-bubble { background: #581c87; color: white; padding: 12px 16px; border-radius: 16px; border-top-right-radius: 4px; font-size: 14px; line-height: 1.5; white-space: pre-line; opacity: 0; transform: translateY(6px); transition: opacity 0.3s, transform 0.3s; }
 .scene-user-bubble.show { opacity: 1; transform: translateY(0); }
 
-.scene-thinking { font-size: 14px; color: #64748b; font-weight: 500; }
-.scene-think-list { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
-.scene-think-item { display: flex; align-items: center; gap: 10px; opacity: 0; transform: translateX(-6px); transition: opacity 0.3s, transform 0.3s; font-size: 13px; color: #1e293b; }
+.scene-thinking-label { font-size: 12px; color: #64748b; font-weight: 600; margin-bottom: 6px; opacity: 0; transition: opacity 0.3s; }
+.scene-thinking-label.show { opacity: 1; }
+.scene-think-item { display: flex; align-items: center; gap: 10px; opacity: 0; transform: translateX(-6px); transition: opacity 0.3s, transform 0.3s; font-size: 12.5px; color: #1e293b; padding: 3px 0; }
 .scene-think-item.show { opacity: 1; transform: translateX(0); }
-.scene-think-check { width: 20px; height: 20px; border-radius: 50%; background: #1f2937; color: white; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold; flex-shrink: 0; }
+.scene-think-check { width: 18px; height: 18px; border-radius: 50%; background: #1f2937; color: white; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: bold; flex-shrink: 0; }
 .scene-think-check::before { content: '✓'; }
 
-.scene-bot-reply { display: flex; flex-direction: column; gap: 4px; align-items: flex-start; max-width: 85%; }
-.scene-bot-bubble { background: #f1f5f9; color: #0f172a; padding: 12px 16px; border-radius: 14px; border-top-left-radius: 4px; font-size: 14px; line-height: 1.5; opacity: 0; transform: translateY(6px); transition: opacity 0.3s, transform 0.3s; }
+.scene-bot-bubble { background: #f1f5f9; color: #0f172a; padding: 11px 15px; border-radius: 14px; border-top-left-radius: 4px; font-size: 14px; line-height: 1.5; opacity: 0; transform: translateY(6px); transition: opacity 0.3s, transform 0.3s; }
 .scene-bot-bubble.show { opacity: 1; transform: translateY(0); }
+.scene-bot-bubble + .scene-bot-bubble { border-top-left-radius: 14px; }
+
+/* Typing indicator dots */
+.scene-typing { background: #f1f5f9; padding: 10px 14px; border-radius: 14px; border-top-left-radius: 4px; align-self: flex-start; opacity: 0; transition: opacity 0.2s; display: inline-flex; gap: 4px; }
+.scene-typing.show { opacity: 1; }
+.scene-typing span { width: 6px; height: 6px; background: #94a3b8; border-radius: 50%; animation: bounce 1.2s infinite both; }
+.scene-typing span:nth-child(2) { animation-delay: 0.15s; }
+.scene-typing span:nth-child(3) { animation-delay: 0.3s; }
+@keyframes bounce { 0%, 60%, 100% { transform: translateY(0); opacity: 0.4; } 30% { transform: translateY(-4px); opacity: 1; } }
 
 /* Footer controls */
 .scene-controls { display: flex; justify-content: space-between; align-items: center; margin-top: 32px; }
@@ -362,13 +375,8 @@ footer { font-size: 11px; color: #94a3b8; margin-top: 20px; text-align: center; 
         <div id="scene-left"></div>
       </div>
 
-      <!-- Center: Phone-style stage -->
-      <div class="scene-stage" id="scene-stage">
-        <div class="scene-user-bubble" id="scene-user-bubble"></div>
-        <div class="scene-thinking">Thinking…</div>
-        <div class="scene-think-list" id="scene-thinks"></div>
-        <div class="scene-bot-reply" id="scene-bot-reply"></div>
-      </div>
+      <!-- Center: Phone-style stage (flowing chat) -->
+      <div class="scene-stage" id="scene-stage"></div>
 
       <!-- Right: Model + Actions -->
       <div class="scene-side">
@@ -714,15 +722,13 @@ function closeModeModal() { modeModal.classList.remove('show'); }
 function openCasesModal() { casesModal.classList.add('show'); }
 function closeCasesModal() { casesModal.classList.remove('show'); }
 
-// ─── SCENE PLAYER (Stripe-style scripted demos) ─────────
+// ─── SCENE PLAYER (Stripe-style multi-turn scripted demos) ─────
 const sceneVeil = document.getElementById('scene-veil');
 const sceneNameEl = document.getElementById('scene-name');
 const sceneMetaEl = document.getElementById('scene-meta');
 const sceneLeftEl = document.getElementById('scene-left');
 const sceneRightEl = document.getElementById('scene-right');
-const sceneUserBubble = document.getElementById('scene-user-bubble');
-const sceneThinks = document.getElementById('scene-thinks');
-const sceneBotReply = document.getElementById('scene-bot-reply');
+const sceneStageEl = document.getElementById('scene-stage');
 const scenePipRow = document.getElementById('scene-pip-row');
 const sceneModelEl = document.getElementById('scene-model');
 
@@ -736,10 +742,7 @@ function resetSceneStage() {
   clearSceneTimers();
   sceneLeftEl.innerHTML = '';
   sceneRightEl.innerHTML = '';
-  sceneUserBubble.classList.remove('show');
-  sceneUserBubble.textContent = '';
-  sceneThinks.innerHTML = '';
-  sceneBotReply.innerHTML = '';
+  sceneStageEl.innerHTML = '';
 }
 
 function renderSceneCard(container, card) {
@@ -748,6 +751,63 @@ function renderSceneCard(container, card) {
   div.innerHTML = `<div class="scene-card-head"><span class="scene-card-icon">${card.icon}</span><span class="scene-card-title">${escapeHtml(card.title)}</span></div><div class="scene-card-sub">${escapeHtml(card.subtitle || '')}</div>`;
   container.appendChild(div);
   return div;
+}
+
+function setActiveCard(container, div) {
+  container.querySelectorAll('.scene-card').forEach(d => d.classList.remove('active'));
+  if (div) div.classList.add('active');
+}
+
+function autoScrollStage() {
+  sceneStageEl.scrollTop = sceneStageEl.scrollHeight;
+}
+
+function appendUserBubble(text) {
+  const wrap = document.createElement('div');
+  wrap.className = 'scene-row-user';
+  const b = document.createElement('div');
+  b.className = 'scene-user-bubble';
+  b.textContent = text;
+  wrap.appendChild(b);
+  sceneStageEl.appendChild(wrap);
+  requestAnimationFrame(() => { b.classList.add('show'); autoScrollStage(); });
+}
+
+function appendThinkingBlock() {
+  const wrap = document.createElement('div');
+  wrap.className = 'scene-row-thinking';
+  const lbl = document.createElement('div');
+  lbl.className = 'scene-thinking-label show';
+  lbl.textContent = 'Thinking…';
+  wrap.appendChild(lbl);
+  sceneStageEl.appendChild(wrap);
+  autoScrollStage();
+  return wrap;
+}
+
+function appendThinkItem(blockEl, text) {
+  const item = document.createElement('div');
+  item.className = 'scene-think-item';
+  item.innerHTML = `<div class="scene-think-check"></div><div>${escapeHtml(text)}</div>`;
+  blockEl.appendChild(item);
+  requestAnimationFrame(() => { item.classList.add('show'); autoScrollStage(); });
+}
+
+function appendTypingIndicator() {
+  const t = document.createElement('div');
+  t.className = 'scene-typing';
+  t.innerHTML = '<span></span><span></span><span></span>';
+  sceneStageEl.appendChild(t);
+  requestAnimationFrame(() => { t.classList.add('show'); autoScrollStage(); });
+  return t;
+}
+
+function appendBotBubble(text, container) {
+  const b = document.createElement('div');
+  b.className = 'scene-bot-bubble';
+  b.textContent = text;
+  container.appendChild(b);
+  requestAnimationFrame(() => { b.classList.add('show'); autoScrollStage(); });
 }
 
 function buildScenePips() {
@@ -783,79 +843,90 @@ async function openScene(modeId) {
   buildScenePips();
   sceneVeil.classList.add('show');
 
-  // animate the scene
   animateScene(s.scenario);
 }
 
 function animateScene(sc) {
-  // user bubble shows immediately
-  sceneUserBubble.textContent = sc.userMsg;
-  sceneTimers.push(setTimeout(() => sceneUserBubble.classList.add('show'), 100));
+  let baseT = 0;
+  const turnGap = sc.turnGapMs || 800;
 
-  // pre-create all left cards (hidden)
-  const leftDivs = sc.leftCards.map(c => renderSceneCard(sceneLeftEl, c));
-  // pre-create all right cards (hidden)
-  const rightDivs = sc.rightCards.map(c => renderSceneCard(sceneRightEl, c));
+  for (const turn of sc.turns) {
+    const turnStart = baseT;
 
-  // schedule left card reveals
-  sc.leftCards.forEach((c, i) => {
+    // user msg appears at turn start
+    sceneTimers.push(setTimeout(() => appendUserBubble(turn.userMsg), turnStart + 100));
+
+    // small typing pause then thinking block
+    let thinkBlock = null;
     sceneTimers.push(setTimeout(() => {
-      // mark previous as inactive, this one active
-      leftDivs.forEach(d => d.classList.remove('active'));
-      leftDivs[i].classList.add('show', 'active');
-    }, c.delay));
-  });
+      thinkBlock = appendThinkingBlock();
+    }, turnStart + 300));
 
-  // schedule right card reveals
-  sc.rightCards.forEach((c, i) => {
-    sceneTimers.push(setTimeout(() => {
-      rightDivs.forEach(d => d.classList.remove('active'));
-      rightDivs[i].classList.add('show', 'active');
-    }, c.delay));
-  });
+    // schedule left cards (with active highlight, then deactivate when next appears)
+    turn.leftCards.forEach(c => {
+      sceneTimers.push(setTimeout(() => {
+        const div = renderSceneCard(sceneLeftEl, c);
+        div.classList.add('show');
+        setActiveCard(sceneLeftEl, div);
+      }, turnStart + 300 + c.delay));
+    });
 
-  // schedule thinking step reveals
-  sc.thinkingSteps.forEach(step => {
-    sceneTimers.push(setTimeout(() => {
-      const div = document.createElement('div');
-      div.className = 'scene-think-item';
-      div.innerHTML = `<div class="scene-think-check"></div><div>${escapeHtml(step.text)}</div>`;
-      sceneThinks.appendChild(div);
-      requestAnimationFrame(() => div.classList.add('show'));
-    }, step.delay));
-  });
+    // schedule right cards
+    turn.rightCards.forEach(c => {
+      sceneTimers.push(setTimeout(() => {
+        const div = renderSceneCard(sceneRightEl, c);
+        div.classList.add('show');
+        setActiveCard(sceneRightEl, div);
+      }, turnStart + 300 + c.delay));
+    });
 
-  // schedule final bubbles
-  if (sc.finalReply) {
-    sceneTimers.push(setTimeout(() => {
-      // Clear "active" highlight on left/right cards (scene complete)
-      sceneLeftEl.querySelectorAll('.scene-card').forEach(d => d.classList.remove('active'));
-      sceneRightEl.querySelectorAll('.scene-card').forEach(d => d.classList.remove('active'));
+    // schedule thinking items
+    turn.thinking.forEach(step => {
+      sceneTimers.push(setTimeout(() => {
+        if (thinkBlock) appendThinkItem(thinkBlock, step.text);
+      }, turnStart + 300 + step.delay));
+    });
 
-      sc.finalReply.bubbles.forEach((text, idx) => {
+    // schedule bot bubbles (in their own row)
+    let botRow = null;
+    let typing = null;
+    if (turn.botBubbles && turn.botBubbles.length) {
+      const firstBubbleDelay = Math.min(...turn.botBubbles.map(b => b.delay));
+      // typing dots appear ~400ms before first bubble
+      sceneTimers.push(setTimeout(() => {
+        typing = appendTypingIndicator();
+      }, turnStart + 300 + Math.max(0, firstBubbleDelay - 500)));
+      sceneTimers.push(setTimeout(() => {
+        if (typing) typing.remove();
+        botRow = document.createElement('div');
+        botRow.className = 'scene-row-bot';
+        sceneStageEl.appendChild(botRow);
+      }, turnStart + 300 + firstBubbleDelay - 80));
+
+      turn.botBubbles.forEach(bb => {
         sceneTimers.push(setTimeout(() => {
-          const b = document.createElement('div');
-          b.className = 'scene-bot-bubble';
-          b.textContent = text;
-          sceneBotReply.appendChild(b);
-          requestAnimationFrame(() => b.classList.add('show'));
-        }, idx * 600));
+          if (botRow) appendBotBubble(bb.text, botRow);
+        }, turnStart + 300 + bb.delay));
       });
-    }, sc.finalReply.delay));
+    }
+
+    baseT += 300 + turn.durationMs + turnGap;
   }
+
+  // After all turns, deactivate cards
+  sceneTimers.push(setTimeout(() => {
+    sceneLeftEl.querySelectorAll('.scene-card').forEach(d => d.classList.remove('active'));
+    sceneRightEl.querySelectorAll('.scene-card').forEach(d => d.classList.remove('active'));
+  }, baseT));
 }
 
 function replayScene() {
-  if (currentSceneId) {
-    resetSceneStage();
-    openScene(currentSceneId);
-  }
+  if (currentSceneId) openScene(currentSceneId);
 }
 
 function closeScene() {
   clearSceneTimers();
   sceneVeil.classList.remove('show');
-  // Open mode picker again so user can try another
   setTimeout(() => openModeModal(), 350);
 }
 

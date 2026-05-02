@@ -1,6 +1,8 @@
-// scenes.js — Stripe-style scripted scene definitions for the 4 AI modes.
-// Each scene plays automatically: cards fade in on left/right + thinking
-// checkmarks + final reply bubble. User just watches, ~5-8 seconds.
+// scenes.js — Multi-turn scripted scene scripts (Stripe-style demo).
+// Each scene plays 2-3 conversational turns: user → thinking + cards → bot reply,
+// then next user → more thinking + cards → next bot reply. ~10-12s total.
+
+const TURN_GAP_MS = 800;
 
 const SCENES = [
   // ─────────── 1. AI Group Order Agent ───────────────────
@@ -13,38 +15,51 @@ const SCENES = [
     industry: 'F&B / Wholesale / Group Buy',
 
     scenario: {
-      userMsg: '10kg sayur kangkong\n5kg tomato\n3kg onion\nfor Cheras outlet — deliver tomorrow',
       model: 'GPT-4o',
-      durationMs: 6500,
-
-      leftCards: [
-        { delay: 500,  icon: '📩', title: 'WhatsApp inbox',  subtitle: 'Reading message…' },
-        { delay: 1500, icon: '📋', title: 'Order template',   subtitle: 'Matching against catalog' },
-        { delay: 3000, icon: '📊', title: 'Google Sheets',    subtitle: 'orders_log_2026.xlsx' }
-      ],
-
-      rightCards: [
-        { delay: 2200, icon: '⚙️', title: 'Parse order',      subtitle: '3 items + qty' },
-        { delay: 3500, icon: '✅', title: 'Confirm order',    subtitle: 'Stock checked' },
-        { delay: 4200, icon: '📤', title: 'Auto-place order', subtitle: 'Logged to Sheet' }
-      ],
-
-      thinkingSteps: [
-        { delay: 700,  text: 'Read order' },
-        { delay: 1700, text: 'Parsed 3 items × qty' },
-        { delay: 2700, text: 'Outlet: Cheras (verified)' },
-        { delay: 3700, text: 'Confirmed against catalog' },
-        { delay: 4700, text: 'Logged to Google Sheet' }
-      ],
-
-      finalReply: {
-        delay: 5500,
-        bubbles: [
-          'Order locked in! 🎉',
-          '✅ 3 items confirmed for Cheras',
-          '🚚 Delivery tomorrow 9am — logged to Sheet'
-        ]
-      }
+      turnGapMs: TURN_GAP_MS,
+      turns: [
+        {
+          durationMs: 4200,
+          userMsg: '10kg sayur kangkong\n5kg tomato\n3kg onion\nfor Cheras outlet',
+          leftCards: [
+            { delay: 700,  icon: '📩', title: 'WhatsApp inbox',  subtitle: 'Reading message' },
+            { delay: 2200, icon: '📋', title: 'Order template',   subtitle: 'Matching catalog' }
+          ],
+          rightCards: [
+            { delay: 1500, icon: '⚙️', title: 'Parse order',     subtitle: '3 items + qty' }
+          ],
+          thinking: [
+            { delay: 500,  text: 'Read order' },
+            { delay: 1200, text: 'Parsed 3 items × qty' },
+            { delay: 2000, text: 'Outlet: Cheras (verified)' }
+          ],
+          botBubbles: [
+            { delay: 2700, text: 'Got it! 3 items confirmed for Cheras 🛒' },
+            { delay: 3300, text: 'Quick one — when do you need delivery?' }
+          ]
+        },
+        {
+          durationMs: 4500,
+          userMsg: 'tomorrow morning, before 10am',
+          leftCards: [
+            { delay: 1700, icon: '📊', title: 'Google Sheets',    subtitle: 'orders_log_2026.xlsx' }
+          ],
+          rightCards: [
+            { delay: 700,  icon: '✅', title: 'Confirm order',    subtitle: 'Stock checked' },
+            { delay: 2300, icon: '📤', title: 'Auto-place order', subtitle: 'Driver assigned' }
+          ],
+          thinking: [
+            { delay: 400,  text: 'Slot available: 8-10am' },
+            { delay: 1300, text: 'Stock confirmed' },
+            { delay: 2100, text: 'Logged to Google Sheet' }
+          ],
+          botBubbles: [
+            { delay: 2700, text: 'Locked in tomorrow 8-10am! 🚚' },
+            { delay: 3300, text: 'Order auto-placed, Sheet updated.' },
+            { delay: 3900, text: 'Reply OK to confirm 👍' }
+          ]
+        }
+      ]
     }
   },
 
@@ -58,39 +73,52 @@ const SCENES = [
     industry: 'CRM / Lead Nurture',
 
     scenario: {
-      userMsg: 'Run today\'s outreach: contact all leads with no reply in 14 days',
       model: 'GPT-4o',
-      durationMs: 7000,
-
-      leftCards: [
-        { delay: 500,  icon: '📥', title: 'Google Sheets',      subtitle: 'leads_master.xlsx · 1,247 rows' },
-        { delay: 1700, icon: '🎯', title: 'Filter rules',       subtitle: 'last_contact > 14 days' },
-        { delay: 3300, icon: '💬', title: 'WhatsApp API',       subtitle: 'ChatDaddy connected' }
-      ],
-
-      rightCards: [
-        { delay: 2400, icon: '🔍', title: 'Filter contacts',   subtitle: '47 leads matched' },
-        { delay: 3800, icon: '✉️', title: 'Personalize msg',   subtitle: 'Per-lead context' },
-        { delay: 4600, icon: '📨', title: 'Send outreach',      subtitle: '47 messages queued' },
-        { delay: 5400, icon: '⏰', title: 'Schedule follow-up', subtitle: 'D3 + D7 cron' }
-      ],
-
-      thinkingSteps: [
-        { delay: 700,  text: 'Read 1,247 leads from Sheet' },
-        { delay: 1900, text: 'Filtered: 47 cold leads' },
-        { delay: 3000, text: 'Generated 47 personalized messages' },
-        { delay: 4100, text: 'Sent via WhatsApp API' },
-        { delay: 5200, text: 'Follow-up scheduled D3 + D7' }
-      ],
-
-      finalReply: {
-        delay: 6000,
-        bubbles: [
-          'Outreach complete! 📤',
-          '✅ 47 leads contacted',
-          '⏰ Follow-ups locked for D3 + D7'
-        ]
-      }
+      turnGapMs: TURN_GAP_MS,
+      turns: [
+        {
+          durationMs: 4500,
+          userMsg: 'Run today\'s outreach to cold leads',
+          leftCards: [
+            { delay: 600,  icon: '📥', title: 'Google Sheets',   subtitle: 'leads_master · 1,247 rows' },
+            { delay: 2000, icon: '🎯', title: 'Filter rules',    subtitle: 'last_contact > 14 days' }
+          ],
+          rightCards: [
+            { delay: 1300, icon: '🔍', title: 'Filter contacts', subtitle: 'Scanning sheet…' }
+          ],
+          thinking: [
+            { delay: 500,  text: 'Connected to Sheet' },
+            { delay: 1500, text: 'Read 1,247 leads' },
+            { delay: 2400, text: 'Filtered 47 cold leads' }
+          ],
+          botBubbles: [
+            { delay: 3000, text: '47 cold leads found 📋' },
+            { delay: 3600, text: 'Want me to send personalized outreach to all 47?' }
+          ]
+        },
+        {
+          durationMs: 5000,
+          userMsg: 'Yes, go ahead',
+          leftCards: [
+            { delay: 1500, icon: '💬', title: 'WhatsApp API',     subtitle: 'ChatDaddy connected' }
+          ],
+          rightCards: [
+            { delay: 600,  icon: '✉️', title: 'Personalize',      subtitle: 'Per-lead context' },
+            { delay: 2100, icon: '📨', title: 'Send outreach',     subtitle: '47 messages queued' },
+            { delay: 3300, icon: '⏰', title: 'Schedule follow-up', subtitle: 'D3 + D7 cron' }
+          ],
+          thinking: [
+            { delay: 500,  text: 'Generating 47 personalized msgs' },
+            { delay: 1700, text: 'Sending via WhatsApp API' },
+            { delay: 2900, text: 'Follow-ups locked D3 + D7' }
+          ],
+          botBubbles: [
+            { delay: 3500, text: 'Outreach complete! 📤' },
+            { delay: 4100, text: '✅ 47 leads contacted, follow-ups scheduled' },
+            { delay: 4500, text: 'Daily report tomorrow 9am 📊' }
+          ]
+        }
+      ]
     }
   },
 
@@ -104,42 +132,67 @@ const SCENES = [
     industry: 'Booking / Consulting / Services',
 
     scenario: {
-      userMsg: 'Hi, I want to book a consultation for next week',
       model: 'GPT-4o',
-      durationMs: 7500,
-
-      leftCards: [
-        { delay: 500,  icon: '🤔', title: 'Q1/Q2/Q3 qualifier', subtitle: 'Lead qualification framework' },
-        { delay: 2000, icon: '📅', title: 'Calendar API',       subtitle: 'Cal.com connected' },
-        { delay: 3800, icon: '🔔', title: 'Reminder service',   subtitle: 'WhatsApp + email' }
-      ],
-
-      rightCards: [
-        { delay: 1300, icon: '✓',  title: 'Q1: Purpose',        subtitle: 'AI consulting · captured' },
-        { delay: 2300, icon: '✓',  title: 'Q2: Timeline',       subtitle: 'Next week · captured' },
-        { delay: 3000, icon: '✓',  title: 'Q3: Decision maker', subtitle: 'Yes · captured' },
-        { delay: 4500, icon: '🔗', title: 'Send booking link',  subtitle: 'cal.com/aibenjamin' },
-        { delay: 5300, icon: '⏰', title: 'Set reminder',       subtitle: '24h + 1h before' },
-        { delay: 6000, icon: '📆', title: 'Update calendar',    subtitle: 'Sat 10am · synced' }
-      ],
-
-      thinkingSteps: [
-        { delay: 700,  text: 'Detecting booking intent' },
-        { delay: 1500, text: 'Q1 ✓ purpose: consultation' },
-        { delay: 2500, text: 'Q2 ✓ timing: next week' },
-        { delay: 3300, text: 'Q3 ✓ authority: yes' },
-        { delay: 4200, text: 'Found 3 open slots' },
-        { delay: 5500, text: 'Booking link sent + reminder set' }
-      ],
-
-      finalReply: {
-        delay: 6500,
-        bubbles: [
-          'Locked in for Sat 10am! 🎉',
-          '🔗 Booking link sent — confirm in 1 tap',
-          '⏰ Reminder ON: 24h + 1h before'
-        ]
-      }
+      turnGapMs: TURN_GAP_MS,
+      turns: [
+        {
+          durationMs: 3500,
+          userMsg: 'Hi, I want to book a consultation',
+          leftCards: [
+            { delay: 700,  icon: '🤔', title: 'Q1/Q2/Q3 qualifier', subtitle: 'Lead qualification' }
+          ],
+          rightCards: [],
+          thinking: [
+            { delay: 400, text: 'Detected: booking intent' },
+            { delay: 1200, text: 'Starting Q1 (purpose)' }
+          ],
+          botBubbles: [
+            { delay: 1800, text: 'Hey! Sure thing 👋' },
+            { delay: 2400, text: 'What\'s the consultation about?' }
+          ]
+        },
+        {
+          durationMs: 3700,
+          userMsg: 'AI implementation for my motor dealership',
+          leftCards: [],
+          rightCards: [
+            { delay: 700, icon: '✓', title: 'Q1: Purpose', subtitle: 'AI consulting · captured' }
+          ],
+          thinking: [
+            { delay: 400, text: 'Q1 ✓ purpose: AI consulting' },
+            { delay: 1300, text: 'Asking Q2 (timing)' }
+          ],
+          botBubbles: [
+            { delay: 1900, text: 'Got it — AI for motor dealer ✓' },
+            { delay: 2600, text: 'When works for you? Weekdays or weekends?' }
+          ]
+        },
+        {
+          durationMs: 5500,
+          userMsg: 'Saturday morning works. I\'m the owner.',
+          leftCards: [
+            { delay: 1800, icon: '📅', title: 'Calendar API',     subtitle: 'Cal.com connected' },
+            { delay: 3500, icon: '🔔', title: 'Reminder service', subtitle: 'WhatsApp + email' }
+          ],
+          rightCards: [
+            { delay: 600,  icon: '✓',  title: 'Q2: Timing',        subtitle: 'Sat morning · captured' },
+            { delay: 1100, icon: '✓',  title: 'Q3: Authority',     subtitle: 'Owner · captured' },
+            { delay: 2400, icon: '🔗', title: 'Send booking link',  subtitle: 'cal.com/aibenjamin' },
+            { delay: 4000, icon: '📆', title: 'Update calendar',    subtitle: 'Sat 10am · synced' }
+          ],
+          thinking: [
+            { delay: 400,  text: 'Q2 + Q3 ✓ — fully qualified' },
+            { delay: 1600, text: 'Found Sat 10am slot' },
+            { delay: 2700, text: 'Sent booking link' },
+            { delay: 4200, text: 'Reminder set 24h + 1h before' }
+          ],
+          botBubbles: [
+            { delay: 3000, text: 'Sat 10am locked in! 🎉' },
+            { delay: 3700, text: '🔗 Booking link sent — confirm in 1 tap' },
+            { delay: 4700, text: '⏰ I\'ll remind you 24h before' }
+          ]
+        }
+      ]
     }
   },
 
@@ -153,40 +206,53 @@ const SCENES = [
     industry: 'Sales Operations',
 
     scenario: {
-      userMsg: 'Hi, urgent — looking for AI agency for my motor dealership. 3 outlets, need to close this month.',
       model: 'GPT-4o',
-      durationMs: 6500,
-
-      leftCards: [
-        { delay: 500,  icon: '🧠', title: 'Intent classifier',  subtitle: 'Hot/Warm/Cold + Vertical' },
-        { delay: 1700, icon: '👥', title: 'Sales team roster',  subtitle: '3 reps · specialization tagged' },
-        { delay: 3500, icon: '🗂️', title: 'CRM (Supabase)',    subtitle: 'leads.crm_pipeline' }
-      ],
-
-      rightCards: [
-        { delay: 1200, icon: '🚨', title: 'Detect intent',     subtitle: 'HOT · motor · urgent' },
-        { delay: 2400, icon: '🎯', title: 'Match specialist',  subtitle: 'John (motor expert)' },
-        { delay: 3200, icon: '🔔', title: 'Notify John',        subtitle: 'WhatsApp alert sent' },
-        { delay: 4200, icon: '📊', title: 'Update CRM',         subtitle: 'status = HOT · assigned' }
-      ],
-
-      thinkingSteps: [
-        { delay: 700,  text: 'Classified intent: HOT lead' },
-        { delay: 1500, text: 'Vertical: motor dealer' },
-        { delay: 2300, text: 'Urgency: this month + multi-outlet' },
-        { delay: 3000, text: 'Best rep: John (motor expert)' },
-        { delay: 3900, text: 'Alert sent to John\'s WhatsApp' },
-        { delay: 4900, text: 'CRM updated: status=HOT, owner=John' }
-      ],
-
-      finalReply: {
-        delay: 5500,
-        bubbles: [
-          'Got it — connecting you with John 👨‍💼',
-          'Our motor specialist (he\'s closed 12 dealerships).',
-          '⏱️ He\'ll WhatsApp you within 15 min.'
-        ]
-      }
+      turnGapMs: TURN_GAP_MS,
+      turns: [
+        {
+          durationMs: 4200,
+          userMsg: 'Hi — urgent. AI agency for my motor dealership, 3 outlets, need to close this month.',
+          leftCards: [
+            { delay: 600,  icon: '🧠', title: 'Intent classifier', subtitle: 'Hot/Warm/Cold + Vertical' }
+          ],
+          rightCards: [
+            { delay: 1500, icon: '🚨', title: 'Detect intent',     subtitle: 'HOT · motor · urgent' }
+          ],
+          thinking: [
+            { delay: 500,  text: 'Classifying intent…' },
+            { delay: 1300, text: 'HOT lead · motor · urgent' },
+            { delay: 2100, text: 'Multi-outlet (3) · this month' }
+          ],
+          botBubbles: [
+            { delay: 2700, text: 'Got it — sounds urgent 🔥' },
+            { delay: 3300, text: 'Quick read on your needs… stand by.' }
+          ]
+        },
+        {
+          durationMs: 5500,
+          userMsg: 'Sure, let me know who I\'ll be talking to',
+          leftCards: [
+            { delay: 1100, icon: '👥', title: 'Sales team roster', subtitle: '3 reps · specialization tagged' },
+            { delay: 3000, icon: '🗂️', title: 'CRM (Supabase)',    subtitle: 'leads.crm_pipeline' }
+          ],
+          rightCards: [
+            { delay: 700,  icon: '🎯', title: 'Match specialist',  subtitle: 'John (motor expert)' },
+            { delay: 2200, icon: '🔔', title: 'Notify John',        subtitle: 'WhatsApp alert sent' },
+            { delay: 3600, icon: '📊', title: 'Update CRM',         subtitle: 'status=HOT, owner=John' }
+          ],
+          thinking: [
+            { delay: 500,  text: 'Best match: John (motor specialist)' },
+            { delay: 1500, text: 'John has closed 12 dealerships' },
+            { delay: 2700, text: 'Sent WhatsApp alert to John' },
+            { delay: 4000, text: 'CRM updated · pipeline owner=John' }
+          ],
+          botBubbles: [
+            { delay: 3200, text: 'You\'re going to John 👨‍💼' },
+            { delay: 3900, text: '12 dealerships closed, including KL3 last quarter.' },
+            { delay: 4700, text: 'He\'ll WhatsApp you within 15 min ⏱️' }
+          ]
+        }
+      ]
     }
   }
 ];
