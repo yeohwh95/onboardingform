@@ -447,7 +447,8 @@ let generatedUrl = '';
 
 // ── FORM INTERACTIONS ──────────────────────────────────
 document.querySelectorAll('.opt-item').forEach(el => {
-  el.addEventListener('click', () => {
+  el.addEventListener('click', (e) => {
+    e.preventDefault();
     const g = el.dataset.group, isRadio = el.classList.contains('opt-radio');
     if (isRadio) {
       document.querySelectorAll(`.opt-item[data-group="${g}"]`).forEach(x => x.classList.remove('selected'));

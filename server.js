@@ -1,6 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const path = require('path');
+const { appendRow } = require('./sheets');
 
 const app = express();
 app.use(express.json());
@@ -37,13 +38,14 @@ const HANDOFF_LABELS = {
   'visit-invite':   'Invite to visit'
 };
 
-function buildMessage(d, shareUrl) {
+function buildMessage(d, shareUrl, clientId) {
   const flows   = (d.flows || []).map(f => FLOW_LABELS[f] || f).join(', ') || '—';
   const pain    = (d.pain  || []).join(', ') || '—';
   const handoff = HANDOFF_LABELS[d.handoff] || d.handoff || '—';
   const phone   = (d.phone || '').replace(/[^0-9]/g, '');
+  const idLine  = clientId ? `\n🆔 *Client ID:* ${clientId}` : '';
 
-  return `🔔 *New AI Flow Submission*
+  return `🔔 *New AI Flow Submission*${idLine}
 
 🏢 *Business:* ${d.bizName} (${d.bizType})
 👤 *Contact:* ${d.name || '—'} · ${d.phone || 'no phone'}
@@ -68,9 +70,18 @@ app.post('/api/submit', async (req, res) => {
     const hash = Buffer.from(encodeURIComponent(JSON.stringify(d))).toString('base64');
     const shareUrl = `${BASE_URL}/#${hash}`;
 
-    await sendWhatsApp(buildMessage(d, shareUrl));
+    let clientId = null;
+    try {
+      clientId = await appendRow(d, shareUrl);
+      console.log(`[sheet] row appended: ${clientId}`);
+    } catch (sheetErr) {
+      console.error('[sheet error]', sheetErr.message);
+    }
 
-    res.json({ ok: true, shareUrl });
+    // WA notification disabled — sheet write only for now.
+    // Re-enable: await sendWhatsApp(buildMessage(d, shareUrl, clientId));
+
+    res.json({ ok: true, shareUrl, clientId });
   } catch (e) {
     console.error('[submit error]', e.message);
     res.status(500).json({ ok: false, error: e.message });
