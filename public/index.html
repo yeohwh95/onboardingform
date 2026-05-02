@@ -44,9 +44,9 @@ body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f1f5f9; min-
 .opt-item.selected { border-color: #2563eb; background: #eff6ff; }
 .opt-item input { position: absolute; opacity: 0; width: 0; height: 0; }
 .opt-icon { font-size: 20px; flex-shrink: 0; }
-.opt-text { flex: 1; }
-.opt-title { font-size: 13px; font-weight: 700; color: #0f172a; }
-.opt-sub { font-size: 11px; color: #64748b; margin-top: 2px; line-height: 1.4; }
+.opt-text { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+.opt-title { display: block; font-size: 13px; font-weight: 700; color: #0f172a; }
+.opt-sub { display: block; font-size: 11px; color: #64748b; margin-top: 3px; line-height: 1.4; }
 .opt-check { width: 18px; height: 18px; border-radius: 4px; border: 2px solid #d1d5db; flex-shrink: 0; margin-top: 2px; display: flex; align-items: center; justify-content: center; transition: all 0.15s; font-size: 11px; font-weight: 800; color: white; }
 .opt-item.selected .opt-check { background: #2563eb; border-color: #2563eb; }
 .opt-item.selected .opt-check::after { content: '✓'; }
