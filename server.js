@@ -5,6 +5,7 @@ const OpenAI = require('openai');
 const { appendRow } = require('./sheets');
 const { build, getDemoConfig } = require('./builder');
 const { listModes, getMode } = require('./modes');
+const { listScenes, getScene } = require('./scenes');
 
 const app = express();
 app.use(express.json());
@@ -160,15 +161,16 @@ app.get('/api/demo/:client_id/config', async (req, res) => {
   }
 });
 
-// List all available "Try other AI" modes (Sales / Service / Operations)
+// List all 4 scripted scenes (Group Order / GSheet / Appointment / Sales Manager)
 app.get('/api/demo/modes', async (req, res) => {
-  try {
-    const modes = await listModes();
-    res.json({ ok: true, modes });
-  } catch (e) {
-    console.error('[modes list]', e.message);
-    res.status(500).json({ ok: false, error: e.message });
-  }
+  res.json({ ok: true, modes: listScenes() });
+});
+
+// Full scene timeline for the player to animate
+app.get('/api/demo/scene/:mode_id', async (req, res) => {
+  const s = getScene(req.params.mode_id);
+  if (!s) return res.status(404).json({ ok: false, error: 'scene not found' });
+  res.json({ ok: true, scene: s });
 });
 
 // Get config for a specific mode (used when user clicks a mode in the modal)

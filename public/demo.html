@@ -151,6 +151,72 @@ footer { font-size: 11px; color: #94a3b8; margin-top: 20px; text-align: center; 
 .case-stat { font-size: 24px; font-weight: 900; color: #2563eb; line-height: 1; margin: 8px 0 4px; }
 .case-stat-label { font-size: 11px; color: #475569; font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; }
 .case-desc { font-size: 12px; color: #1e293b; line-height: 1.5; margin-top: 8px; }
+
+/* ──────────── SCENE PLAYER (Stripe-style scripted demo) ──────────── */
+.scene-veil { position: fixed; inset: 0; background: linear-gradient(180deg, #fafafa 0%, #f5f5f7 100%); z-index: 8500; opacity: 0; visibility: hidden; transition: opacity 0.35s ease, visibility 0.35s; overflow-y: auto; }
+.scene-veil.show { opacity: 1; visibility: visible; }
+.scene-wrap { max-width: 1280px; margin: 0 auto; padding: 24px 28px 80px; }
+
+.scene-header { display: flex; align-items: center; gap: 14px; margin-bottom: 32px; }
+.scene-back { background: transparent; border: none; color: #64748b; font-size: 14px; cursor: pointer; padding: 8px 12px; border-radius: 8px; font-family: inherit; transition: background 0.15s; display: flex; align-items: center; gap: 6px; }
+.scene-back:hover { background: #f1f5f9; color: #0f172a; }
+.scene-titleblock { flex: 1; }
+.scene-name { font-size: 22px; font-weight: 800; color: #0f172a; }
+.scene-meta { font-size: 12px; color: #64748b; margin-top: 2px; }
+
+.scene-grid { display: grid; grid-template-columns: 240px 1fr 240px; gap: 32px; align-items: flex-start; }
+@media (max-width: 900px) { .scene-grid { grid-template-columns: 1fr; gap: 16px; } }
+
+.scene-side { display: flex; flex-direction: column; gap: 12px; }
+.scene-side-label { font-size: 10px; font-weight: 800; letter-spacing: 1.5px; color: #94a3b8; text-transform: uppercase; padding: 0 4px; margin-bottom: 4px; }
+
+.scene-card { background: white; border: 1.5px solid #e5e7eb; border-radius: 14px; padding: 14px 16px; opacity: 0; transform: translateY(8px); transition: opacity 0.4s ease, transform 0.4s ease, border-color 0.3s, box-shadow 0.3s; }
+.scene-card.show { opacity: 1; transform: translateY(0); }
+.scene-card.active { border-image: linear-gradient(135deg, #f97316, #d946ef) 1; border: 1.5px solid; box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.06); }
+.scene-card-head { display: flex; align-items: center; gap: 10px; margin-bottom: 4px; }
+.scene-card-icon { font-size: 18px; }
+.scene-card-title { font-size: 13px; font-weight: 700; color: #0f172a; }
+.scene-card-sub { font-size: 11px; color: #64748b; padding-left: 28px; }
+
+/* Center: phone-like card */
+.scene-stage { background: white; border-radius: 18px; padding: 28px 28px 24px; min-height: 520px; position: relative; box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08); border: 1.5px solid; border-image: linear-gradient(135deg, #f97316, #d946ef) 1; display: flex; flex-direction: column; gap: 16px; }
+
+.scene-user-bubble { background: #581c87; color: white; padding: 14px 18px; border-radius: 18px; font-size: 14px; line-height: 1.5; align-self: flex-end; max-width: 85%; opacity: 0; transform: translateY(6px); transition: opacity 0.3s, transform 0.3s; white-space: pre-line; }
+.scene-user-bubble.show { opacity: 1; transform: translateY(0); }
+
+.scene-thinking { font-size: 14px; color: #64748b; font-weight: 500; }
+.scene-think-list { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
+.scene-think-item { display: flex; align-items: center; gap: 10px; opacity: 0; transform: translateX(-6px); transition: opacity 0.3s, transform 0.3s; font-size: 13px; color: #1e293b; }
+.scene-think-item.show { opacity: 1; transform: translateX(0); }
+.scene-think-check { width: 20px; height: 20px; border-radius: 50%; background: #1f2937; color: white; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold; flex-shrink: 0; }
+.scene-think-check::before { content: '✓'; }
+
+.scene-bot-reply { display: flex; flex-direction: column; gap: 4px; align-items: flex-start; max-width: 85%; }
+.scene-bot-bubble { background: #f1f5f9; color: #0f172a; padding: 12px 16px; border-radius: 14px; border-top-left-radius: 4px; font-size: 14px; line-height: 1.5; opacity: 0; transform: translateY(6px); transition: opacity 0.3s, transform 0.3s; }
+.scene-bot-bubble.show { opacity: 1; transform: translateY(0); }
+
+/* Footer controls */
+.scene-controls { display: flex; justify-content: space-between; align-items: center; margin-top: 32px; }
+.scene-pip-row { display: flex; gap: 6px; }
+.scene-pip { width: 8px; height: 8px; border-radius: 50%; background: #cbd5e1; cursor: pointer; transition: background 0.2s; }
+.scene-pip.active { background: #2563eb; width: 24px; border-radius: 4px; }
+.scene-cta-row { display: flex; gap: 12px; align-items: center; }
+.scene-btn { padding: 10px 20px; border-radius: 10px; font-size: 13px; font-weight: 700; cursor: pointer; border: 1.5px solid; transition: all 0.15s; font-family: inherit; }
+.scene-btn-secondary { background: white; color: #475569; border-color: #e2e8f0; }
+.scene-btn-secondary:hover { background: #f8fafc; }
+.scene-btn-primary { background: #0f172a; color: white; border-color: #0f172a; }
+.scene-btn-primary:hover { background: #1e293b; transform: translateY(-1px); }
+
+/* Mode picker grid (4 modes shown in scene-veil before user picks) */
+.scene-pick-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; max-width: 720px; margin: 40px auto 24px; }
+@media (max-width: 640px) { .scene-pick-grid { grid-template-columns: 1fr; } }
+.scene-pick-card { background: white; border: 2px solid #e2e8f0; border-radius: 16px; padding: 24px 20px; cursor: pointer; transition: all 0.2s; text-align: left; font-family: inherit; }
+.scene-pick-card:hover { border-color: var(--mode-color, #2563eb); transform: translateY(-3px); box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08); }
+.scene-pick-icon { font-size: 32px; margin-bottom: 10px; }
+.scene-pick-name { font-size: 16px; font-weight: 800; color: #0f172a; margin-bottom: 4px; }
+.scene-pick-desc { font-size: 12px; color: #64748b; line-height: 1.5; }
+.scene-pick-meta { font-size: 10px; color: #94a3b8; margin-top: 8px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
+.scene-replay-hint { text-align: center; font-size: 12px; color: #94a3b8; margin: 32px 0 16px; }
 </style>
 </head>
 <body>
@@ -277,6 +343,51 @@ footer { font-size: 11px; color: #94a3b8; margin-top: 20px; text-align: center; 
 
 <!-- Floating "Try other AI" button -->
 <button class="try-other-btn" id="try-other-btn" onclick="openModeModal()">🎯 Try other AI</button>
+
+<!-- ──────────── SCENE PLAYER OVERLAY ──────────── -->
+<div class="scene-veil" id="scene-veil">
+  <div class="scene-wrap">
+    <div class="scene-header">
+      <button class="scene-back" onclick="closeScene()">← Back</button>
+      <div class="scene-titleblock">
+        <div class="scene-name" id="scene-name">AI Agent in Action</div>
+        <div class="scene-meta" id="scene-meta">Live demo · auto-plays</div>
+      </div>
+    </div>
+
+    <div class="scene-grid">
+      <!-- Left: Sources / Tools -->
+      <div class="scene-side">
+        <div class="scene-side-label">Tools / Sources</div>
+        <div id="scene-left"></div>
+      </div>
+
+      <!-- Center: Phone-style stage -->
+      <div class="scene-stage" id="scene-stage">
+        <div class="scene-user-bubble" id="scene-user-bubble"></div>
+        <div class="scene-thinking">Thinking…</div>
+        <div class="scene-think-list" id="scene-thinks"></div>
+        <div class="scene-bot-reply" id="scene-bot-reply"></div>
+      </div>
+
+      <!-- Right: Model + Actions -->
+      <div class="scene-side">
+        <div class="scene-side-label">Model</div>
+        <div class="scene-card show" id="scene-model"><div class="scene-card-head"><span class="scene-card-icon">🧠</span><span class="scene-card-title">GPT-4o</span></div></div>
+        <div class="scene-side-label" style="margin-top: 16px">Actions</div>
+        <div id="scene-right"></div>
+      </div>
+    </div>
+
+    <div class="scene-controls">
+      <div class="scene-pip-row" id="scene-pip-row"></div>
+      <div class="scene-cta-row">
+        <button class="scene-btn scene-btn-secondary" onclick="replayScene()">↺ Replay</button>
+        <button class="scene-btn scene-btn-primary" onclick="closeScene()">Try another →</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <script>
 // ─── State ─────────────────────────────────────────────
@@ -581,9 +692,9 @@ function buildModeGrid() {
   modeGrid.innerHTML = '';
   for (const m of availableModes) {
     const btn = document.createElement('button');
-    btn.className = 'mode-btn' + (currentModeId === m.modeId ? ' active' : '');
-    btn.innerHTML = `<span class="mode-icon">${m.icon}</span><div class="mode-name">${escapeHtml(m.businessName)}</div><div class="mode-desc">${escapeHtml(m.description)}</div>`;
-    btn.onclick = () => switchToMode(m.modeId);
+    btn.className = 'mode-btn';
+    btn.innerHTML = `<span class="mode-icon">${m.icon}</span><div class="mode-name">${escapeHtml(m.name)}</div><div class="mode-desc">${escapeHtml(m.description)}</div>`;
+    btn.onclick = () => { closeModeModal(); openScene(m.modeId); };
     modeGrid.appendChild(btn);
   }
   // Industry case studies button
@@ -603,50 +714,149 @@ function closeModeModal() { modeModal.classList.remove('show'); }
 function openCasesModal() { casesModal.classList.add('show'); }
 function closeCasesModal() { casesModal.classList.remove('show'); }
 
-async function switchToMode(modeId) {
-  closeModeModal();
-  brainDivider('switching mode');
-  brainLine(`🔄 Loading ${modeId} demo...`, 'event');
+// ─── SCENE PLAYER (Stripe-style scripted demos) ─────────
+const sceneVeil = document.getElementById('scene-veil');
+const sceneNameEl = document.getElementById('scene-name');
+const sceneMetaEl = document.getElementById('scene-meta');
+const sceneLeftEl = document.getElementById('scene-left');
+const sceneRightEl = document.getElementById('scene-right');
+const sceneUserBubble = document.getElementById('scene-user-bubble');
+const sceneThinks = document.getElementById('scene-thinks');
+const sceneBotReply = document.getElementById('scene-bot-reply');
+const scenePipRow = document.getElementById('scene-pip-row');
+const sceneModelEl = document.getElementById('scene-model');
+
+let sceneTimers = [];
+let currentSceneId = null;
+let currentSceneData = null;
+
+function clearSceneTimers() { sceneTimers.forEach(t => clearTimeout(t)); sceneTimers = []; }
+
+function resetSceneStage() {
+  clearSceneTimers();
+  sceneLeftEl.innerHTML = '';
+  sceneRightEl.innerHTML = '';
+  sceneUserBubble.classList.remove('show');
+  sceneUserBubble.textContent = '';
+  sceneThinks.innerHTML = '';
+  sceneBotReply.innerHTML = '';
+}
+
+function renderSceneCard(container, card) {
+  const div = document.createElement('div');
+  div.className = 'scene-card';
+  div.innerHTML = `<div class="scene-card-head"><span class="scene-card-icon">${card.icon}</span><span class="scene-card-title">${escapeHtml(card.title)}</span></div><div class="scene-card-sub">${escapeHtml(card.subtitle || '')}</div>`;
+  container.appendChild(div);
+  return div;
+}
+
+function buildScenePips() {
+  scenePipRow.innerHTML = '';
+  for (const m of availableModes) {
+    const pip = document.createElement('div');
+    pip.className = 'scene-pip' + (m.modeId === currentSceneId ? ' active' : '');
+    pip.title = m.name;
+    pip.onclick = () => openScene(m.modeId);
+    scenePipRow.appendChild(pip);
+  }
+}
+
+async function openScene(modeId) {
+  resetSceneStage();
+  currentSceneId = modeId;
 
   try {
-    const r = await fetch(`/api/demo/mode/${modeId}/config`);
-    const cfg = await r.json();
-    if (!cfg.ok) throw new Error(cfg.error || 'mode load failed');
-
-    currentModeId = modeId;
-    history = [];
-    pendingUserMsgs = [];
-    if (mergeTimer) clearTimeout(mergeTimer);
-    sentCount = 0;
-    busy = false;
-
-    // Visually reset the chat (keep typing element)
-    const bubbles = chatEl.querySelectorAll('.bubble');
-    bubbles.forEach(b => b.remove());
-
-    document.getElementById('biz-name').textContent = `${cfg.businessName} AI`;
-    document.getElementById('hdr-name').textContent = cfg.businessName;
-    document.getElementById('avatar').textContent = (cfg.personaName || cfg.businessName || '?').slice(0, 2).toUpperCase();
-    modePill.style.display = 'block';
-    modePill.textContent = (modeId.replace('_', ' ')).toUpperCase();
-
-    brainLine('✓ Loaded ' + cfg.businessName, 'success');
-    brainLine('✓ Persona: ' + (cfg.personaName || 'AI Assistant'), 'success');
-    brainLine('🚀 New demo ready', 'event');
-
-    setTyping(true);
-    await sleep(800);
-    setTyping(false);
-    renderBubble('bot', cfg.openingMsg);
-    history.push({ role: 'assistant', content: cfg.openingMsg });
-    brainDivider('waiting for user');
-
-    sendBtn.disabled = false;
-    inputEl.disabled = false;
-    inputEl.focus();
+    const r = await fetch(`/api/demo/scene/${modeId}`);
+    const j = await r.json();
+    if (!j.ok) throw new Error(j.error || 'scene not found');
+    currentSceneData = j.scene;
   } catch (e) {
-    brainLine('❌ Mode switch failed: ' + e.message, 'warn');
+    alert('Failed to load scene: ' + e.message);
+    return;
   }
+
+  const s = currentSceneData;
+  sceneNameEl.textContent = s.icon + ' ' + s.name;
+  sceneMetaEl.textContent = `${s.industry} · live demo · auto-plays`;
+  sceneModelEl.querySelector('.scene-card-title').textContent = s.scenario.model || 'GPT-4o';
+
+  buildScenePips();
+  sceneVeil.classList.add('show');
+
+  // animate the scene
+  animateScene(s.scenario);
+}
+
+function animateScene(sc) {
+  // user bubble shows immediately
+  sceneUserBubble.textContent = sc.userMsg;
+  sceneTimers.push(setTimeout(() => sceneUserBubble.classList.add('show'), 100));
+
+  // pre-create all left cards (hidden)
+  const leftDivs = sc.leftCards.map(c => renderSceneCard(sceneLeftEl, c));
+  // pre-create all right cards (hidden)
+  const rightDivs = sc.rightCards.map(c => renderSceneCard(sceneRightEl, c));
+
+  // schedule left card reveals
+  sc.leftCards.forEach((c, i) => {
+    sceneTimers.push(setTimeout(() => {
+      // mark previous as inactive, this one active
+      leftDivs.forEach(d => d.classList.remove('active'));
+      leftDivs[i].classList.add('show', 'active');
+    }, c.delay));
+  });
+
+  // schedule right card reveals
+  sc.rightCards.forEach((c, i) => {
+    sceneTimers.push(setTimeout(() => {
+      rightDivs.forEach(d => d.classList.remove('active'));
+      rightDivs[i].classList.add('show', 'active');
+    }, c.delay));
+  });
+
+  // schedule thinking step reveals
+  sc.thinkingSteps.forEach(step => {
+    sceneTimers.push(setTimeout(() => {
+      const div = document.createElement('div');
+      div.className = 'scene-think-item';
+      div.innerHTML = `<div class="scene-think-check"></div><div>${escapeHtml(step.text)}</div>`;
+      sceneThinks.appendChild(div);
+      requestAnimationFrame(() => div.classList.add('show'));
+    }, step.delay));
+  });
+
+  // schedule final bubbles
+  if (sc.finalReply) {
+    sceneTimers.push(setTimeout(() => {
+      // Clear "active" highlight on left/right cards (scene complete)
+      sceneLeftEl.querySelectorAll('.scene-card').forEach(d => d.classList.remove('active'));
+      sceneRightEl.querySelectorAll('.scene-card').forEach(d => d.classList.remove('active'));
+
+      sc.finalReply.bubbles.forEach((text, idx) => {
+        sceneTimers.push(setTimeout(() => {
+          const b = document.createElement('div');
+          b.className = 'scene-bot-bubble';
+          b.textContent = text;
+          sceneBotReply.appendChild(b);
+          requestAnimationFrame(() => b.classList.add('show'));
+        }, idx * 600));
+      });
+    }, sc.finalReply.delay));
+  }
+}
+
+function replayScene() {
+  if (currentSceneId) {
+    resetSceneStage();
+    openScene(currentSceneId);
+  }
+}
+
+function closeScene() {
+  clearSceneTimers();
+  sceneVeil.classList.remove('show');
+  // Open mode picker again so user can try another
+  setTimeout(() => openModeModal(), 350);
 }
 
 // Maybe auto-open the mode modal after enough turns
