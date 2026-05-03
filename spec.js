@@ -2,14 +2,15 @@
 // Produces the plain-text Claude Code build spec from form data.
 
 const FLOW_NAMES = {
-  'lead-qualify': 'Lead Qualify',
-  'follow-up':    'Follow-Up Sequence',
-  'appointment':  'Appointment Booking',
-  'order-intake': 'Order Intake',
-  'outreach':     'Sheet → Outreach',
-  'renewal':      'Renewal Reminder',
-  'faq-support':  'FAQ + Smart Escalation',
-  'data-sync':    'Data Sync Between Tools'
+  'lead-qualify':     'Lead Qualify',
+  'follow-up':        'Follow-Up Sequence',
+  'appointment':      'Appointment Booking',
+  'order-intake':     'Order Intake',
+  'outreach':         'Sheet → Outreach',
+  'renewal':          'Renewal Reminder',
+  'faq-support':      'FAQ + Smart Escalation',
+  'data-sync':        'Data Sync Between Tools',
+  'product-photo-id': 'Product Photo ID + Inventory Match'
 };
 
 const TOOL_LABELS = {
@@ -137,6 +138,21 @@ function flowBlock(f, idx, d, name) {
       `      requires: "webhook endpoints + retry logic + idempotency"`
     );
   }
+  if (f === 'product-photo-id') {
+    const ownerKey = (name || 'owner').toLowerCase().replace(/\s+/g, '_');
+    lines.push(
+      `      trigger: "image_attachment_in_inbound_message"`,
+      `      steps:`,
+      `        1: "vision_ai_identify (brand + model + color + material + condition)"`,
+      `        2: "search_live_inventory (Shopify/EasyStore/Sheet API)"`,
+      `        3: "if_in_stock → reply_with_photos_price_reserve_cta"`,
+      `        4: "if_sold_out → search_past_listings → offer_preorder_at_historical_price"`,
+      `        5: "on_yes_reply → tag_for_sales_handover + alert_${ownerKey}"`,
+      `      vision_model: "gpt-4o (vision-capable)"`,
+      `      fallback: "if_low_confidence → ask_clarifying_question (e.g. brand?)"`,
+      `      requires: "OpenAI vision + inventory API (Shopify/EasyStore/Sheet) + past-listings archive"`
+    );
+  }
   return lines.join('\n');
 }
 
@@ -159,6 +175,7 @@ function buildSpec(d) {
   if (flows.includes('appointment'))  tmplBase.push('booking_confirmation', '24h_reminder');
   if (flows.includes('order-intake')) tmplBase.push('order_summary_confirm', 'order_logged_receipt');
   if (flows.includes('renewal'))      tmplBase.push('renewal_d30', 'renewal_d14_upgrade', 'renewal_d7_urgency');
+  if (flows.includes('product-photo-id')) tmplBase.push('photo_received_processing', 'product_match_found_in_stock', 'product_sold_out_preorder_offer', 'low_confidence_ask_clarification', 'sales_handover_tag_alert');
   const tmplList = [...new Set(tmplBase)].map(t => `  ▸ "${t}"`).join('\n');
 
   const ownerPhone = (d.phone || 'OWNER_NUMBER').replace(/\D/g, '');

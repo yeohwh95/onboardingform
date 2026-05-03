@@ -33,11 +33,12 @@ async function sendWhatsApp(text) {
 }
 
 const FLOW_LABELS = {
-  'lead-qualify': 'Lead Qualify',
-  'follow-up':    'Follow-Up Sequence',
-  'appointment':  'Appointment Booking',
-  'order-intake': 'Order Intake',
-  'renewal':      'Renewal Reminder'
+  'lead-qualify':     'Lead Qualify',
+  'follow-up':        'Follow-Up Sequence',
+  'appointment':      'Appointment Booking',
+  'order-intake':     'Order Intake',
+  'renewal':          'Renewal Reminder',
+  'product-photo-id': 'Product Photo ID + Inventory Match'
 };
 
 const HANDOFF_LABELS = {
